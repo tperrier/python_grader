@@ -32,6 +32,9 @@ class PrintLogger:
     def warn(self,*messages,**kwargs):
 	self.log(*messages,color='warning',**kwargs)
 	
+    def error(self,*messages,**kwargs):
+	self.log(*messages,color='error',**kwargs)
+	
     def header(self,*messages,**kwargs):
 	self.log(*messages,color='header',**kwargs)
     
@@ -56,6 +59,10 @@ class PrintLogger:
 	    
     def splitlines(self):
 	return str(self).splitlines()
+	
+    def clear(self):
+	self.output = []
+	self.color_output = []
 	
     def __str__(self):
 	return ''.join(self.output)

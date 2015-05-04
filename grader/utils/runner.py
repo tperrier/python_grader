@@ -2,7 +2,6 @@
 import ast
 
 
-
 class NodeRemover(ast.NodeTransformer):
     
     def __init__(self,file_name,func_list):

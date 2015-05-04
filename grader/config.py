@@ -2,15 +2,16 @@ import collections,csv,os
 
 TeachingAssistant = collections.namedtuple('TA',['name','short_name','email','section'])
 
-ta_map = {
-    'nick':TeachingAssistant('Nick Shahan','nick','nshahan@cs.washington.edu','AB'),
-    'lee':TeachingAssistant('Lee Organick','lee','leeorg@cs.washington.edu','AA'),
-    'trevor':TeachingAssistant('Trevor Perrier','trevor','tperrier@cs.washington.edu','AC'),
-}
-
+ta_map = {}
+with open('ta.csv','r') as fp:
+    reader = csv.reader(fp)
+    reader.next() #skip header
+    
+    for row in reader:
+	ta = TeachingAssistant(*row)
+	ta_map[ta.short_name] = ta
 
 Student = collections.namedtuple('Student',['username','last_name','first_name','number','status'])
-
 student_id_map = {}  #Maps number:student nameedtuple 
 with open('students.csv','r') as fp:
     reader = csv.reader(fp)
