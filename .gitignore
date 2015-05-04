@@ -1,0 +1,10 @@
+*
+!/.gitignore
+!grader/
+!grader/*
+
+
+*.pyc
+*.pyo
+
+
