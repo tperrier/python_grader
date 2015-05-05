@@ -39,7 +39,8 @@ if __name__ == '__main__':
 
     #Import grad.py file - will rise error if not found
     sys.path.append(args.grading_folder)
-    args.grade = __import__(args.grade_modual)
+    grade_modual = __import__(args.grade_modual)
+    args.grade = grade_modual.GradeRunner(args.show_feedback)
     
     #Set default SUBMISSIONS and FEEDBACK folders if not set.
     if args.submission_dir is None:
@@ -60,6 +61,7 @@ if __name__ == '__main__':
 	section_folders = utils.dirs.get_sub_directories(args.submission_dir)
 	args.submission_folders = utils.dirs.get_sub_directories(*section_folders)
 
+    print args
     #Run grader
     grader.grade(args)
     

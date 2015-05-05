@@ -1,0 +1,3 @@
+
+class GenericCheck(object):
+    pass

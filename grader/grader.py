@@ -34,6 +34,7 @@ def grade(args):
             grade_student(args,submission_path)
             error_dir = ''
         except Exception as e:
+            print e
             error_dir = 'errors'
             
                 
@@ -65,14 +66,11 @@ def grade(args):
         utils.output.PROGRESS_LOG.header(progress_msg)
 
 def grade_student(args,submission):
-    
     first_time = True
     while first_time or args.pause:
-        
-        
         #Run run_hw() from grade
-        args.grade.run_hw(args)
-        
+        args.grade.run_hw()
+        print 'After'
         first_time = False #Exit while loop if args.pause is false 
         if args.pause:
             # Pause in case the grader needs to review this student's files
