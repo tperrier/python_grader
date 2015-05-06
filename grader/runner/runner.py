@@ -107,4 +107,5 @@ class BaseRunner(object):
 	utils.output.PROGRESS_LOG.error(err_str)
 	with open('output.txt','w') as fp:
 	    traceback.print_exc(file=fp)
+	sys.stdout = sys.__stdout__
 	raise e

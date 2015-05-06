@@ -7,7 +7,7 @@ import utils,grader
 
 def make_argument_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-g','--grading-folder',default='current',help='Directory contaning GRADE_FILE and SUBMISSIONS. Defaults to current',metavar='FOLDER')
+    parser.add_argument('-g','--grading-folder',default='current',help='Directory containing GRADE_FILE and SUBMISSIONS. Defaults to current',metavar='FOLDER')
     
     parser.add_argument('-t','--target',nargs='*',help='Single submission FOLDER to run',metavar='FOLDER')
     parser.add_argument('-s','--submissions-folder',help='Folder inside SUBMISSION_DIR to process. Defaults to all folders',metavar='SUBMISSIONS_FOLDER')
@@ -16,11 +16,12 @@ def make_argument_parser():
     parser.add_argument('--grade-modual',default='grade',help='Python script to run grades',metavar='GRADE_FILE')
     parser.add_argument('--feedback_dir',default=None,help='Directory to place feedback. Default GRADING_FOLDER/feedback')
     
-    parser.add_argument('-q','--quite',action='store_true',default=False) #Yes to everything
+    parser.add_argument('-q','--quite',action='store_false',default=True,help='Say yes to everything. Default is True')
     parser.add_argument('-f','--show-feedback',action='store_true',default=False)
     parser.add_argument('--refresh-sandbox',action='store_true',default=False,help='Refresh all config scripts in Grading Sandbox')
-    parser.add_argument('--pause',action='store_true',default=False)
+    
     parser.add_argument('--survey',action='store_true',default=False,help='Parse survey results into folder')
+    parser.add_argument('--errors',action='store_true',default=False,help='Run in error mode')
     
     return parser
 
@@ -47,21 +48,12 @@ if __name__ == '__main__':
 	args.submission_dir = os.path.join(args.grading_folder,'submissions')
     if args.feedback_dir is None:
 	args.feedback_dir = os.path.join(args.grading_folder,'feedback')
-    
     #Set sandbox folder
-    args.grading_sandbox = os.path.abspath(os.path.join(args.grading_folder,'sandbox'))
+    args.grading_sandbox = os.path.join(args.grading_folder,'sandbox')
     
-    #Get submission folders
-    if args.target:
-	args.submission_folders = args.target[:]
-    elif args.submissions_folder:
-        args.submission_folders = utils.dirs.get_sub_directories(os.path.join(args.submission_dir,args.submissions_folder))
-    else: #default to all folders inside SUBMISSIONS_DIR
-	#Get all subdirectories of SUBMISSION_DIR
-	section_folders = utils.dirs.get_sub_directories(args.submission_dir)
-	args.submission_folders = utils.dirs.get_sub_directories(*section_folders)
-
-    print args
-    #Run grader
-    grader.grade(args)
+    #Grade in either error mode or submissions mode
+    if args.errors:
+	grader.grade_errors(args)
+    else: #default grade all submissions
+	grader.grade_submissions(args)
     

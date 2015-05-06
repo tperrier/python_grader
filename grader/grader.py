@@ -1,13 +1,106 @@
 #!/usr/bin/python
 
 #system imports
-import sys, os, shutil, time, re, subprocess, csv, code
+import sys, os, shutil, time, re, subprocess, csv, code, traceback,StringIO
 #local imports
 import utils,config
 
-def grade(args):
+def grade_errors(args):
     
-    #Create grading sandbox if needed
+    #Get submission folders:
+    #Get submission folders
+    if args.target:
+        errors_dirs = args.target[:]
+    elif args.submissions_folder:
+        errors_dirs = [os.path.join(args.feedback_dir,args.submissions_folder,'errors')]
+    else:
+        feedback_dirs = utils.dirs.get_sub_directories(args.feedback_dir)
+        errors_dir = []
+        for fd in feedback_dirs:
+            errors_dir.append(os.path.join(args.feedback_dir,fd,'errors'))
+    
+    submission_folders = []
+    for ed in errors_dirs:
+        submission_folders.extend(utils.dirs.get_sub_directories(ed))
+
+    create_sandbox(args)
+    
+    args.errors = True #We are in error mode
+
+    for i,submission_path in enumerate(submission_folders):
+        
+        # Print Header
+        progress_msg = 'Preparing to grade student {1}/{2} ({0})...'.format(submission_path, i+1, len(submission_folders))
+        utils.output.PROGRESS_LOG.header(progress_msg)
+        
+        errors = grade_student(args,submission_path)
+        
+        #Get path for feedback
+        if errors: #There are still errors so place inside feedback/submission_path/errors/lastname_uwid
+            # Get relative path between submission_dir and submission_path and duplicate dir structure for feedback
+            feedback_path = submission_path
+        else: #Move copy to feedback/submission_path/lastname_uwid_FIXED
+            dir_split = submission_path.split(os.sep)
+            del dir_split[-2]
+            dir_split[-1] += '_FIXED'
+            feedback_path = os.sep.join(dir_split) 
+            
+            #also copy original error folder into feedback_path/original
+            original_path = os.path.join(feedback_path,'original')
+            utils.dirs.copy_all(submission_path,original_path,None)
+            
+            #Remove original
+            utils.dirs.remove_all(submission_path)
+        
+        copy_feedback_and_remove(args,feedback_path)
+        
+        
+        progress_msg = 'Correct! Feedback in {0}'.format(feedback_path)
+        utils.output.PROGRESS_LOG.header(progress_msg)
+    
+    progress_msg = 'All Done!\n'
+    for fd in errors_dirs:
+        num_errors = len(os.listdir(fd))
+        progress_msg = '{} ({}) errors {}'.format(fd,num_errors,'DELETED' if num_errors == 0 else '')
+        if num_errors == 0:
+            utils.dirs.remove_all(fd)
+    utils.output.PROGRESS_LOG(progress_msg,color='blue')
+
+def grade_submissions(args):
+    
+    #Get submission folders
+    if args.target:
+        submission_folders = args.target[:]
+    elif args.submissions_folder:
+        submission_folders = utils.dirs.get_sub_directories(os.path.join(args.submission_dir,args.submissions_folder))
+    else: #default to all folders inside SUBMISSIONS_DIR
+        #Get all subdirectories of SUBMISSION_DIR
+        section_folders = utils.dirs.get_sub_directories(args.submission_dir)
+        submission_folders = utils.dirs.get_sub_directories(*section_folders)
+    
+    create_sandbox(args)
+    
+    for i,submission_path in enumerate(submission_folders):
+        
+        # Print Header
+        progress_msg = 'Preparing to grade student {1}/{2} ({0})...'.format(submission_path, i, len(submission_folders))
+        utils.output.PROGRESS_LOG.header(progress_msg)
+        
+        errors = grade_student(args,submission_path)
+        
+        #Get Feedback path
+        errors_dir = 'errors' if errors else ''
+        # Get relative path between submission_dir and submission_path and duplicate dir structure for feedback
+        feedback_dir,submission_folder = os.path.split(os.path.relpath(submission_path,args.submission_dir))
+        feedback_path = os.path.join(args.feedback_dir,feedback_dir,errors_dir,submission_folder)
+        
+        copy_feedback_and_remove(args,feedback_path)
+        
+        progress_msg = 'Done. Feedback in {0}'.format(feedback_path)
+        utils.output.PROGRESS_LOG.header(progress_msg)
+        
+def create_sandbox(args):
+     #Create grading sandbox if needed
     if args.refresh_sandbox or not os.path.exists(args.grading_sandbox):
         utils.output.PROGRESS_LOG.header("Creating grading sandbox...")
         utils.dirs.ensure_directory_exists(args.grading_sandbox)
@@ -16,73 +109,66 @@ def grade(args):
         utils.output.PROGRESS_LOG.warn("Grading sandbox exists. Assuming files required for grading are present.")
     print
     
-    TOTAL_SUBMISSIONS = len(args.submission_folders)
-    for i,submission_path in enumerate(args.submission_folders):
-        # Print Header
-        progress_msg = 'Preparing to grade student {1}/{2} ({0})...'.format(submission_path, i, TOTAL_SUBMISSIONS)
-        utils.output.PROGRESS_LOG.header(progress_msg)
-        
-        # Copy in the solution files to grading sandbox
-        utils.dirs.copy_all(submission_path, args.grading_sandbox, *args.grade.solution_files)
-        
-
-        #change working directory to grading sandbox
-        cwd = os.getcwd()
-        os.chdir(args.grading_sandbox)
-        
-        try:
-            grade_student(args,submission_path)
-            error_dir = ''
-        except Exception as e:
-            print e
-            error_dir = 'errors'
-            
-                
-        #Change back to cwd
-        os.chdir(cwd)
-        
-        #Get Feedback path 
-        # Get relative path between submission_dir and submission_path and duplicate dir structure for feedback
-        feedback_dir,submission_file = os.path.split(os.path.relpath(submission_path,args.submission_dir))
-        feedback_path = os.path.join(args.feedback_dir,feedback_dir,error_dir,submission_file)
-        if os.path.exists(feedback_path):
-            if not args.quite:
-                utils.output.verify("Are you sure you want to overwrite existing feedback for this student?")
-                utils.dirs.ensure_directory_exists(feedback_path)
-        else:
-            utils.dirs.ensure_directory_exists(feedback_path)
-        
-        #Copy export_files to feedback_path
-        try:
-            utils.dirs.copy_all(args.grading_sandbox,feedback_path,*args.grade.export_files)
-        except IOError as e:
-            utils.output.PROGRESS_LOG.warn(str(e))
-        
-        #Delete generated files
-        files_to_delete = args.grade.solution_files | args.grade.generated_files | args.grade.export_files
-        utils.dirs.remove_all(*files_to_delete,parent_path=args.grading_sandbox)
-        
-        progress_msg = 'Done. Feedback in {0}'.format(feedback_path)
-        utils.output.PROGRESS_LOG.header(progress_msg)
-
-def grade_student(args,submission):
+def grade_student(args,submission_path):
+    
+    # Copy in the solution files to grading sandbox
+    utils.dirs.copy_all(submission_path, args.grading_sandbox, *args.grade.solution_files)
+    
+    #change working directory to grading sandbox
+    cwd = os.getcwd()
+    os.chdir(args.grading_sandbox)
+    
     first_time = True
-    while first_time or args.pause:
-        #Run run_hw() from grade
-        args.grade.run_hw()
-        print 'After'
-        first_time = False #Exit while loop if args.pause is false 
-        if args.pause:
-            # Pause in case the grader needs to review this student's files
-            response = raw_input("\nThe student's output files are currently in the grading sandbox for review.\n" \
-                      "Type 'regrade' to rerun the scripts, or anything else to continue: ").lower()
-            if response in ['regrade']:
-                continue #Repeat while loop
-            else:
-                #No regrade so exit while loop
-                break
-
+    errors = False
+    while first_time or args.errors:
+        first_time = False #Exit while loop if args.errors is false 
+        
+        try:
+            #Run run_hw() from grade
+            args.grade.run_hw()
+        except Exception as e:
+            errors = True
+            err_out = StringIO.StringIO()
+            traceback.print_exc(file=err_out)
             
+        if args.errors and errors:
+            # Pause in case the grader needs to review this student's files
+            pause_message = utils.output.colorify('\nThere was an error with the students code\n','error')
+            pause_message += err_out.getvalue()
+            pause_message += "\nThe student's output files are currently in the grading sandbox for review.\n"
+            pause_message += "Type 'r' to rerun the scripts, or anything else to continue: "
+            response = raw_input(pause_message).lower()
+            
+            err_out.close()
+            
+            errors = False #Reset errors
+            if not response.startswith('r'):
+                break #No regrade so exit while loop
+        
+    #Change back to cwd
+    os.chdir(cwd)
+    
+    return errors
+    
+def copy_feedback_and_remove(args,feedback_path):
+    if os.path.exists(feedback_path):
+        if not args.quite:
+            utils.output.verify("Are you sure you want to overwrite existing feedback for this student?")
+            utils.dirs.ensure_directory_exists(feedback_path)
+    else:
+        utils.dirs.ensure_directory_exists(feedback_path)
+    
+    #Copy export_files to feedback_path
+    try:
+        utils.dirs.copy_all(args.grading_sandbox,feedback_path,*args.grade.export_files)
+    except IOError as e:
+        utils.output.PROGRESS_LOG.warn(str(e))
+        
+    #Delete generated files
+    files_to_delete = args.grade.solution_files | args.grade.generated_files | args.grade.export_files
+    utils.dirs.remove_all(args.grading_sandbox,*files_to_delete)
+    
+        
 def student_from_submission_dir(path):
     '''
     Given the path to a student submission on the form: folder1/folder2/LASTNAME_UWID

@@ -26,25 +26,26 @@ def copy_all(src_parent_path, dst_parent_path, *paths):
     
     '''
     ensure_directory_exists(dst_parent_path)
-
+    #If there are no paths then use files in src_parents_path
+    if len(paths) > 0 and paths[0] == None:
+        paths = os.listdir(src_parent_path)
     for path in paths:
         src_path = os.path.join(src_parent_path, path)
-
         if not os.path.exists(src_path):
             raise IOError('Could not copy. File or folder DNE: {0}'.format(src_path))
         elif os.path.isfile(src_path):
             shutil.copy2(src_path, dst_parent_path)
-        elif os.path.isdir(sourc_path):
+        elif os.path.isdir(src_path):
             if os.path.exists(dst_parent_path):
                 shutil.rmtree(dst_parent_path)
             shutil.copytree(src_path, dst_parent_path)
 
-def remove_all(*paths,**kwargs):
+def remove_all(parent_path,*paths):
     '''
     
     '''
-    #If parent_path is not a keyword argument then default to ''
-    parent_path = kwargs.get('parent_path','') 
+    if len(paths) == 0:
+        shutil.rmtree(parent_path)
     for path in paths:
         path = os.path.join(parent_path,path)
         if os.path.isfile(path):
