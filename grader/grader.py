@@ -120,7 +120,7 @@ def grade_student(args,submission_path):
     
     first_time = True
     errors = False
-    while first_time or args.errors:
+    while first_time or (args.errors and errors):
         first_time = False #Exit while loop if args.errors is false 
         
         try:
@@ -209,22 +209,39 @@ def process_survey_row(header,row):
             print '%s:\n\t%s\n'%(header[i],row[i])
             
 
-def process_survey(csv_file='survey.csv'):
-    with open(csv_file) as fp:
+def process_survey(args):
+    #Get all subdirectories of FEEDBACK_DIR
+    feedback_folders = []
+    for path,dirs,files in os.walk(args.feedback_dir):
+        feedback_folders.extend([os.path.join(path,f) for f in dirs if not f.endswith('errors')])
+    
+    def get_submission_folder(folder_name):
+        for submission_path in feedback_folders:
+            if submission_path.endswith(folder_name):
+                print submission_path
+                return submission_path
+                
+        raise KeyError('Folder {} not found'.format(folder_name))
+    
+    with open(args.survey_file) as fp:
         csv_file = csv.reader(fp)
 
         csv_file.next() #skip Intro header
         header = csv_file.next()[8:]
         header = csv_file.next()[:7] + [''] + header
-        
+
         #Process each survey answer
         for row in csv_file:
             student = config.student_netid_map[row[0]]
-            folder = '%s_%s'%(student.last_name,student.number)
-            filename = 'surveys/%s/survey.txt'%folder
+            folder_name = '%s_%s'%(student.last_name,student.number)
+            
+            try:
+                submission_folder = get_submission_folder(folder_name)
+            except KeyError as e:
+                print utils.output.colorify(str(e),'warning')
+            filename = os.path.join(submission_folder,'survery.txt')
             
             #create survey file and make it stdout
-            os.makedirs(os.path.dirname(filename))
             sys.stdout = open(filename,'w')
             process_survey_row(header,row)
             sys.stdout = sys.__stdout__

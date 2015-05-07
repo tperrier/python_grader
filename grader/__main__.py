@@ -21,6 +21,7 @@ def make_argument_parser():
     parser.add_argument('--refresh-sandbox',action='store_true',default=False,help='Refresh all config scripts in Grading Sandbox')
     
     parser.add_argument('--survey',action='store_true',default=False,help='Parse survey results into folder')
+    parser.add_argument('-c','--survey-file',default='survey.csv',help='Location of csv file of survey results. Default survey.csv',metavar='CSV_FILE')
     parser.add_argument('--errors',action='store_true',default=False,help='Run in error mode')
     
     return parser
@@ -31,18 +32,6 @@ if __name__ == '__main__':
     parser = make_argument_parser()
     args = parser.parse_args()
     
-    # Process survey and exit if --survey flag set
-    if args.survey:
-        print "Processing HW survey...."
-        grader.process_survey()
-        print "Done"
-        sys.exit()
-
-    #Import grad.py file - will rise error if not found
-    sys.path.append(args.grading_folder)
-    grade_modual = __import__(args.grade_modual)
-    args.grade = grade_modual.GradeRunner(args.show_feedback)
-    
     #Set default SUBMISSIONS and FEEDBACK folders if not set.
     if args.submission_dir is None:
 	args.submission_dir = os.path.join(args.grading_folder,'submissions')
@@ -50,6 +39,18 @@ if __name__ == '__main__':
 	args.feedback_dir = os.path.join(args.grading_folder,'feedback')
     #Set sandbox folder
     args.grading_sandbox = os.path.join(args.grading_folder,'sandbox')
+    
+    # Process survey and exit if --survey flag set
+    if args.survey:
+        print "Processing HW survey...."
+        grader.process_survey(args)
+        print "Done"
+        sys.exit()
+    
+    #Import grad.py file - will rise error if not found
+    sys.path.append(args.grading_folder)
+    grade_modual = __import__(args.grade_modual)
+    args.grade = grade_modual.GradeRunner(args.show_feedback)
     
     #Grade in either error mode or submissions mode
     if args.errors:
