@@ -1,3 +1,2 @@
 #!/usr/bin/python
-from runner import BaseRunner, NodeRemover
-from checker import GenericCheck
+from runner import BaseRunner, NodeRemover, GraderException

@@ -21,7 +21,7 @@ def make_argument_parser():
     parser.add_argument('--refresh-sandbox',action='store_true',default=False,help='Refresh all config scripts in Grading Sandbox')
     
     parser.add_argument('--survey',action='store_true',default=False,help='Parse survey results into folder')
-    parser.add_argument('-c','--survey-file',default='survey.csv',help='Location of csv file of survey results. Default survey.csv',metavar='CSV_FILE')
+    parser.add_argument('-c','--survey-file',default=None,help='Location of csv file of survey results. Default GRADING_FOLDER/survey.csv',metavar='CSV_FILE')
     parser.add_argument('--errors',action='store_true',default=False,help='Run in error mode')
     
     return parser
@@ -37,6 +37,8 @@ if __name__ == '__main__':
 	args.submission_dir = os.path.join(args.grading_folder,'submissions')
     if args.feedback_dir is None:
 	args.feedback_dir = os.path.join(args.grading_folder,'feedback')
+    if args.survey_file is None:
+	args.survey_file = os.path.join(args.grading_folder,'survey.csv')
     #Set sandbox folder
     args.grading_sandbox = os.path.join(args.grading_folder,'sandbox')
     

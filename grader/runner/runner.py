@@ -5,6 +5,9 @@ import traceback,sys
 
 import grader.utils as utils
 
+class GraderException(Exception):
+    pass
+
 class NodeRemover(ast.NodeTransformer):
     
     def __init__(self,file_name,func_list):
@@ -108,4 +111,4 @@ class BaseRunner(object):
 	with open('output.txt','w') as fp:
 	    traceback.print_exc(file=fp)
 	sys.stdout = sys.__stdout__
-	raise e
+	raise GraderException(str(e))

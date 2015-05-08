@@ -4,6 +4,7 @@
 import sys, os, shutil, time, re, subprocess, csv, code, traceback,StringIO
 #local imports
 import utils,config
+from runner import GraderException
 
 def grade_errors(args):
     
@@ -126,7 +127,7 @@ def grade_student(args,submission_path):
         try:
             #Run run_hw() from grade
             args.grade.run_hw()
-        except Exception as e:
+        except GraderException as e:
             errors = True
             err_out = StringIO.StringIO()
             traceback.print_exc(file=err_out)
