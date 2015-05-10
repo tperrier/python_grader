@@ -23,14 +23,18 @@ def grade_errors(args):
                 errors_dirs.append(error_dir)
     
     submission_folders = []
-    print errors_dirs
+
     for ed in errors_dirs:
         submission_folders.extend(utils.dirs.get_sub_directories(ed))
 
     create_sandbox(args)
     
     args.errors = True #We are in error mode
-
+    
+    #Make sure that notes.txt is copied to and from feedback
+    args.export_files.add('notes.txt')
+    args.solution_files.add('notes.txt')
+    
     for i,submission_path in enumerate(submission_folders):
         
         # Print Header
@@ -98,6 +102,10 @@ def grade_submissions(args):
         feedback_dir,submission_folder = os.path.split(os.path.relpath(submission_path,args.submission_dir))
         feedback_path = os.path.join(args.feedback_dir,feedback_dir,errors_dir,submission_folder)
         
+        #Move notes.txt if it exists
+        if errors and os.path.isfile(os.path.join(args.grading_sandbox,'notes.txt')):
+            os.rename(os.path.join(args.grading_sandbox,'notes.txt'),os.path.join(feedback_path,'notes.txt'))
+        
         copy_feedback_and_remove(args,feedback_path)
         
         progress_msg = 'Done. Feedback in {0}'.format(feedback_path)
@@ -125,7 +133,6 @@ def grade_student(args,submission_path):
     first_time = True
     errors = False
     while first_time or (args.errors and errors):
-        first_time = False #Exit while loop if args.errors is false 
         
         errors = False #Reset errors
         try:
@@ -137,6 +144,9 @@ def grade_student(args,submission_path):
             traceback.print_exc(file=err_out)
             
         if args.errors and errors:
+            if os.path.isfile('notes.txt'): #Make notes file if it does not exist
+                with open('notes.txt','a') as notes_fp:
+                    notes_fp.write('{}\n'.format(submission_path))
             # Pause in case the grader needs to review this student's files
             pause_message = utils.output.colorify('\nThere was an error with the students code\n','error')
             pause_message += err_out.getvalue()
@@ -148,6 +158,8 @@ def grade_student(args,submission_path):
             
             if not response.startswith('r'):
                 break #No regrade so exit while loop
+        
+        first_time = False #Exit while loop if args.errors is false 
         
     #Change back to cwd
     os.chdir(cwd)
