@@ -9,6 +9,8 @@ def get_sub_directories(*paths):
     '''
     sub_dirs = []
     for path in paths:
+        if not os.path.isdir(path):
+            continue #short circuit if not a directory 
         for sub in next(os.walk(path))[1]:
             sub_dirs.append(os.path.join(path,sub))
     return sub_dirs

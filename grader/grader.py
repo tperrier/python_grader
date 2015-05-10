@@ -16,11 +16,14 @@ def grade_errors(args):
         errors_dirs = [os.path.join(args.feedback_dir,args.submissions_folder,'errors')]
     else:
         feedback_dirs = utils.dirs.get_sub_directories(args.feedback_dir)
-        errors_dir = []
+        errors_dirs = []
         for fd in feedback_dirs:
-            errors_dir.append(os.path.join(args.feedback_dir,fd,'errors'))
+            error_dir = os.path.join(fd,'errors')
+            if os.path.isdir(error_dir):
+                errors_dirs.append(error_dir)
     
     submission_folders = []
+    print errors_dirs
     for ed in errors_dirs:
         submission_folders.extend(utils.dirs.get_sub_directories(ed))
 
@@ -118,12 +121,13 @@ def grade_student(args,submission_path):
     #change working directory to grading sandbox
     cwd = os.getcwd()
     os.chdir(args.grading_sandbox)
-    
+
     first_time = True
     errors = False
     while first_time or (args.errors and errors):
         first_time = False #Exit while loop if args.errors is false 
         
+        errors = False #Reset errors
         try:
             #Run run_hw() from grade
             args.grade.run_hw()
@@ -142,7 +146,6 @@ def grade_student(args,submission_path):
             
             err_out.close()
             
-            errors = False #Reset errors
             if not response.startswith('r'):
                 break #No regrade so exit while loop
         
@@ -218,7 +221,7 @@ def process_survey(args):
     
     def get_submission_folder(folder_name):
         for submission_path in feedback_folders:
-            if submission_path.endswith(folder_name):
+            if submission_path.endswith(folder_name) or submission_path.endswith(folder_name+'_FIXED'):
                 print submission_path
                 return submission_path
                 
