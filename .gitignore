@@ -2,9 +2,4 @@
 !/.gitignore
 !grader/
 !grader/*
-
-
-*.pyc
-*.pyo
-
-
+!readme.md
