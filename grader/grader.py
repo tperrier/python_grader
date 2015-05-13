@@ -243,7 +243,7 @@ def process_survey(args):
 
         raise KeyError('Folder {} not found'.format(folder_name))
 
-    with open(args.survey_file) as fp:
+    with open(args.survey_file, 'rU') as fp:
         csv_file = csv.reader(fp)
 
         csv_file.next() #skip Intro header
