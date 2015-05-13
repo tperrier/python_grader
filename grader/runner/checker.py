@@ -31,7 +31,7 @@ class EqualsProblem(object):
                 print '  FAIL!\n\t  {} != {}'.format(out,result)
             else:
                 print '  OK'
-            correct +=1
+                correct +=1
         total = correct*self.points/len(self.checks)
 
         print utils.output.colorify('\tCorrectness: {}/{}\n'.format(total,self.points),'green')
@@ -58,7 +58,4 @@ def check_problems(problem_list,env):
         error_output.write_file('output.txt')
         raise runner.GraderException(str(error_output))
 
-
     return total
-
-
