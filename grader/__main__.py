@@ -34,11 +34,11 @@ if __name__ == '__main__':
     
     #Set default SUBMISSIONS and FEEDBACK folders if not set.
     if args.submission_dir is None:
-	args.submission_dir = os.path.join(args.grading_folder,'submissions')
+        args.submission_dir = os.path.join(args.grading_folder,'submissions')
     if args.feedback_dir is None:
-	args.feedback_dir = os.path.join(args.grading_folder,'feedback')
+        args.feedback_dir = os.path.join(args.grading_folder,'feedback')
     if args.survey_file is None:
-	args.survey_file = os.path.join(args.grading_folder,'survey.csv')
+        args.survey_file = os.path.join(args.grading_folder,'survey.csv')
     #Set sandbox folder
     args.grading_sandbox = os.path.join(args.grading_folder,'sandbox')
     
@@ -56,7 +56,7 @@ if __name__ == '__main__':
     
     #Grade in either error mode or submissions mode
     if args.errors:
-	grader.grade_errors(args)
+        grader.grade_errors(args)
     else: #default grade all submissions
-	grader.grade_submissions(args)
+        grader.grade_submissions(args)
     

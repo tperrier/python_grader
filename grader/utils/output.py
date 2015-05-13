@@ -1,6 +1,10 @@
 #!/usr/bin/python
 
-import sys
+import sys,re
+
+color_remover_regex = re.compile(r'\033\[\d+m')
+def remove_color(string):
+    return color_remover_regex.sub('',string)
 
 def underline(msg):
     return msg + '\n' + '=' * len(msg)
@@ -21,7 +25,6 @@ class PrintLogger:
 	self.stream = stream
 	#TODO: make this a string buffer. Is that faster?
 	self.output = []
-	self.color_output = []
 	self.end = end
 	self.sep = sep
 
@@ -44,10 +47,8 @@ class PrintLogger:
 	return sep.join([m for m in messages])+end
     
     def write(self,str,**kwargs):
-	self.output.append(str)
-	
 	str = colorify(str,kwargs.get('color',''))
-	self.color_output.append(str)
+	self.output.append(str)
 	
 	enable = kwargs.get('enable',False)
 	if enable or (not enable and self.enable):
@@ -55,14 +56,14 @@ class PrintLogger:
 	    
     def write_file(self,file_name):
 	with open(file_name,'w') as fp:
-	    fp.writelines(self.output)
+	    for line in self.output:
+		fp.write(remove_color(line))
 	    
     def splitlines(self):
 	return str(self).splitlines()
 	
     def clear(self):
 	self.output = []
-	self.color_output = []
 	
     def __str__(self):
 	return ''.join(self.output)

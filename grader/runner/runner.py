@@ -40,24 +40,24 @@ class BaseRunner(object):
     __metaclass__ = abc.ABCMeta 
     
     # All files in grading_scripts that must be copied into the grading_sandbox
-    required_for_grading = frozenset()
+    required_for_grading = set()
 
     # All files that students submit - these are copied from submissions/ta_name
-    solution_files = frozenset()
+    solution_files = set()
     
     # Main file to run and grade 
     @abc.abstractproperty
     def main_file(self):
 	return 'FILE NAME OF DEFAULT FILE TO EXECUTE'
 	
-    # List of functions to remove from abstract syntax tree of parsed code
-    remove_func_list = frozenset()
+    # List of functions calls to remove from abstract syntax tree of parsed code
+    remove_func_list = set()
 
     # All files that student code should generate.
-    generated_files = frozenset()
+    generated_files = set()
 
     #All files to export to the student's graded directory
-    export_files = frozenset()
+    export_files = set()
     
     #AST NodeTransformer Class
     ParserClass = NodeRemover
@@ -106,9 +106,13 @@ class BaseRunner(object):
 	return env,hw_output
 	    
     def _exception_handler(self,e):
+	#Reset stdout
+	sys.stdout = sys.__stdout__
+	#Print error message
 	err_str = "EXPECTION EXECUTING CODE: {}".format(e)
 	utils.output.PROGRESS_LOG.error(err_str)
-	with open('output.txt','w') as fp:
-	    traceback.print_exc(file=fp)
-	sys.stdout = sys.__stdout__
-	raise GraderException(str(e))
+	#Get string traceback
+	error_output = utils.output.PrintLogger()
+	traceback.print_exc(file=error_output)
+	error_output.write_file('output.txt')
+	raise GraderException(str(error_output))

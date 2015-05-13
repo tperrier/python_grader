@@ -32,8 +32,8 @@ def grade_errors(args):
     args.errors = True #We are in error mode
     
     #Make sure that notes.txt is copied to and from feedback
-    args.export_files.add('notes.txt')
-    args.solution_files.add('notes.txt')
+    args.grade.export_files.add('notes.txt')
+    args.grade.solution_files.add('notes.txt')
     
     for i,submission_path in enumerate(submission_folders):
         
@@ -104,6 +104,8 @@ def grade_submissions(args):
         
         #Move notes.txt if it exists
         if errors and os.path.isfile(os.path.join(args.grading_sandbox,'notes.txt')):
+            print 'Moving notes.txt'
+            utils.dirs.ensure_directory_exists(feedback_path)
             os.rename(os.path.join(args.grading_sandbox,'notes.txt'),os.path.join(feedback_path,'notes.txt'))
         
         copy_feedback_and_remove(args,feedback_path)
@@ -142,11 +144,13 @@ def grade_student(args,submission_path):
             errors = True
             err_out = StringIO.StringIO()
             traceback.print_exc(file=err_out)
-            
+        
+        if errors and not os.path.isfile('notes.txt'): #Make notes file if it does not exist
+            print 'Making notes.txt',os.getcwd()
+            with open('notes.txt','a') as notes_fp:
+                notes_fp.write('{}\n'.format(submission_path))
+        
         if args.errors and errors:
-            if os.path.isfile('notes.txt'): #Make notes file if it does not exist
-                with open('notes.txt','a') as notes_fp:
-                    notes_fp.write('{}\n'.format(submission_path))
             # Pause in case the grader needs to review this student's files
             pause_message = utils.output.colorify('\nThere was an error with the students code\n','error')
             pause_message += err_out.getvalue()
