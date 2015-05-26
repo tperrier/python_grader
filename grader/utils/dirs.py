@@ -40,7 +40,9 @@ def copy_all(src_parent_path, dst_parent_path, *paths):
         elif os.path.isdir(src_path):
             if os.path.exists(dst_parent_path):
                 shutil.rmtree(dst_parent_path)
-            shutil.copytree(src_path, dst_parent_path)
+            dst_path = os.path.join(dst_parent_path,os.path.basename(src_path))
+            print src_path,dst_path
+            shutil.copytree(src_path, dst_path)
 
 def remove_all(parent_path,*paths):
     '''

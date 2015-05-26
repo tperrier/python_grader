@@ -77,6 +77,10 @@ class BaseRunner(object):
     @abc.abstractproperty
     def main_file(self):
 	return 'FILE NAME OF DEFAULT FILE TO EXECUTE'
+    
+    # Add code to bottom of main file
+    run_main = False
+    append_code = ''
 	
     # List of functions calls to remove from abstract syntax tree of parsed code
     remove_func_list = set()
@@ -122,6 +126,16 @@ class BaseRunner(object):
 	'''Runs self.main_file and returns the environment and output '''
 	if file_name is None:
 	    file_name = self.main_file
+	
+	if self.run_main:
+	    if isinstance(self.append_code,basestring):
+		self.append_code += '\nmain()'
+	    else:
+		self.append_code = 'main()'
+	
+	if self.append_code:
+	    with open(self.main_file,'a') as fp:
+		fp.write('\n'+self.append_code)
 	
 	#Parse file into abstract syntax tree
 	try:
