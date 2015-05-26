@@ -2,10 +2,6 @@
 
 import sys,re
 
-color_remover_regex = re.compile(r'\033\[\d+m')
-def remove_color(string):
-    return color_remover_regex.sub('',string)
-
 def underline(msg):
     return msg + '\n' + '=' * len(msg)
 
@@ -49,7 +45,13 @@ class PrintLogger:
     def write(self,str,**kwargs):
 	str = colorify(str,kwargs.get('color',''))
 	self.output.append(str)
+	self._write(str,**kwargs)
+	    
+    def prepend(self,str,**kwargs):
+	self.output[0:0] = [str]
+	self._write(str,**kwargs)
 	
+    def _write(self,str,**kwargs):
 	enable = kwargs.get('enable',False)
 	if enable or (not enable and self.enable):
 	    self.stream.write(str)
@@ -92,6 +94,10 @@ def header(str):
     
 def error(str):
     return colorify(str,'error')
+    
+color_remover_regex = re.compile(r'\033\[\d+m')
+def remove_color(string):
+    return color_remover_regex.sub('',string)
 	
 DEBUG_LOG = PrintLogger(False)
 PROGRESS_LOG = PrintLogger(True)

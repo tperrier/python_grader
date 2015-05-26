@@ -8,9 +8,11 @@ import checker
 
 class GraderException(Exception):
     
+    ERROR_STR = "EXCEPTION RUNNING CODE: {err}"
+    
     def __init__(self,e,**kwargs):
 	#Print error message
-	err_str = "EXPECTION EXECUTING CODE: {}".format(e)
+	err_str = self.ERROR_STR.format(err=e)
 	utils.output.PROGRESS_LOG.error(err_str)
 	
 	#Get string traceback
@@ -26,13 +28,13 @@ class GraderException(Exception):
 	
     
 class GraderSyntaxError(GraderException):
-    pass
+    ERROR_STR = "EXCEPTION PARSING CODE: {err}"
 
 class GraderRunTimeError(GraderException):
     pass
     
 class GraderCheckerError(GraderException):
-    pass
+    ERROR_STR = "EXCEPTION CHECKING CODE: {err}"
 
 class NodeRemover(ast.NodeTransformer):
     
@@ -93,8 +95,25 @@ class BaseRunner(object):
 	return 'A list of all problems to check'
     
     @abc.abstractmethod
+    def make_header(self,feedback,total):
+	'''Make the header and prepend to feedback'''
+    
     def grade(self):
-	return 'Main grading entry point'
+	'''Main grading entry point'''
+	
+	#Run main file and parse into env with stdout going to output
+        env,output = self.run_hw()
+        
+	#Check problems and create base feedback with a total
+        feedback,total = self.check_hw(env,output)
+        
+	#Make the header and prepend to feedback
+        self.make_header(feedback,total)
+        
+        if not self.show_feedback:
+            utils.output.PROGRESS_LOG('Total: {0[0]}/{0[1]}'.format(total),color='green')
+       
+        return feedback,output
     
     def __init__(self,show_feedback=False):
 	self.show_feedback = show_feedback
