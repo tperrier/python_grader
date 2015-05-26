@@ -31,9 +31,9 @@ def grade_errors(args):
 
     args.errors = True #We are in error mode
 
-    #Make sure that notes.txt is copied to and from feedback
-    args.grade.export_files.add('notes.txt')
-    args.grade.solution_files.add('notes.txt')
+    #Make sure that notes.txt and errors.txt are copied to and from feedback
+    args.grade.export_files.update(['notes.txt','errors.txt'])
+    args.grade.solution_files.update(['notes.txt','errors.txt'])
 
     for i,submission_path in enumerate(submission_folders):
 
@@ -102,13 +102,15 @@ def grade_submissions(args):
         feedback_dir,submission_folder = os.path.split(os.path.relpath(submission_path,args.submission_dir))
         feedback_path = os.path.join(args.feedback_dir,feedback_dir,errors_dir,submission_folder)
 
-        #Move notes.txt if it exists
-        if errors and os.path.isfile(os.path.join(args.grading_sandbox,'notes.txt')):
-            print 'Moving notes.txt'
-            utils.dirs.ensure_directory_exists(feedback_path)
-            os.rename(os.path.join(args.grading_sandbox,'notes.txt'),os.path.join(feedback_path,'notes.txt'))
+        #Add notes.txt and errors.txt from export files
+        if errors:
+            args.grade.export_files.update(['notes.txt','errors.txt'])
 
         copy_feedback_and_remove(args,feedback_path)
+
+         #Remove notes.txt and errors.txt from export files
+        if errors:
+            args.grade.export_files.difference_update(['notes.txt','errors.txt'])
 
         progress_msg = 'Done. Feedback in {0}'.format(feedback_path)
         utils.output.PROGRESS_LOG.header(progress_msg)
@@ -138,28 +140,37 @@ def grade_student(args,submission_path):
 
         errors = False #Reset errors
         try:
-            #Run run_hw() from grade
-            args.grade(args.show_feedback).run_hw()
+            #Run grade() from grade
+            feedback,output = args.grade(args.show_feedback).grade()
         except GraderException as e:
             errors = True
-            #ToDo: str(e) should be the traceback
-            err_out = StringIO.StringIO()
-            traceback.print_exc(file=err_out)
-
-        if errors and not os.path.isfile('notes.txt'): #Make notes file if it does not exist
-            print 'Making notes.txt',os.getcwd()
-            with open('notes.txt','a') as notes_fp:
-                notes_fp.write('{}\n'.format(submission_path))
+            err_msg = str(e)
+            #Write output and feedback if they exist
+            e.feedback.write_file('feedback.txt') if e.feedback else False
+            e.output.write_file('output.txt') if e.output else False
+            
+            #Write errors.txt
+            with(open('errors.txt','w')) as errors_fp:
+                errors_fp.writelines(err_msg)
+            
+            if not os.path.isfile('notes.txt'):
+                print 'Making notes.txt',os.getcwd()
+                with open('notes.txt','a') as notes_fp:
+                    notes_fp.write('{}\n'.format(submission_path))
+        else:
+            #Write output
+            feedback.write_file('feedback.txt')
+            output.write_file('output.txt')
 
         if args.errors and errors:
             # Pause in case the grader needs to review this student's files
             pause_message = utils.output.colorify('\nThere was an error with the students code\n','error')
-            pause_message += err_out.getvalue()
+            pause_message += err_msg
             pause_message += "\nThe student's output files are currently in the grading sandbox for review.\n"
             pause_message += "Type 'r' to rerun the scripts, or anything else to continue: "
             response = raw_input(pause_message).lower()
 
-            err_out.close()
+            err_msg
 
             if not response.startswith('r'):
                 break #No regrade so exit while loop
