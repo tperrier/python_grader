@@ -142,6 +142,7 @@ def grade_student(args,submission_path):
             args.grade(args.show_feedback).run_hw()
         except GraderException as e:
             errors = True
+            #ToDo: str(e) should be the traceback
             err_out = StringIO.StringIO()
             traceback.print_exc(file=err_out)
 

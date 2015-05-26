@@ -4,8 +4,15 @@ import abc #abstract base class
 import traceback,sys
 
 import grader.utils as utils
+import checker
 
 class GraderException(Exception):
+    pass
+    
+class GraderSyntaxError(GraderException):
+    pass
+
+class GraderRunTimeError(GraderException):
     pass
 
 class NodeRemover(ast.NodeTransformer):
@@ -62,57 +69,68 @@ class BaseRunner(object):
     #AST NodeTransformer Class
     ParserClass = NodeRemover
     
+    @abc.abstractmethod
+    def get_problems(self):
+	return 'A list of all problems to check'
+    
     
     def __init__(self,show_feedback=False):
 	self.show_feedback = show_feedback
 	
     def run_hw(self):
-	return self.execute_file()
+	'''Runs self.main_file and returns the environment and output '''
+	env,output = self.execute_file()
+	return env,output
+	
+    def check_hw(self,env,output,show_feedback=False):
+	'''Checks all hw problems'''
+	feedback = utils.output.PrintLogger(enable=show_feedback or self.show_feedback)
+	sys.stdout = feedback
+	
+	try:
+	    total = checker.check_problems(self.get_problems(),env)
+	except Exception as e:
+	    self._exception_handler(e)
+	finally:
+	    #Reset standard out
+	    sys.stdout = sys.__stdout__
+	
+	return feedback,total
+	
 	
     def execute_file(self,file_name=None):
 	if file_name is None:
 	    file_name = self.main_file
 	
-	#Parse and execute file
-	parsed = self.parse_file(file_name)
-	return self.exec_parsed(parsed)
-	
-	
-    def parse_file(self,file_name):
+	#Parse file into abstract syntax tree
 	try:
 	    tree = self.ParserClass(file_name,self.remove_func_list).remove()
 	    parsed = compile(tree,filename=file_name,mode='exec')
 	except Exception as e:
 	    self._exception_handler(e)
-	return parsed
 	    
-    def exec_parsed(self,parsed):
+	#Execute file into black environment
 	#Make name space for student code to execute in
 	env = {}
-	#Make output logger
-	hw_output = utils.output.PrintLogger(end='')
-	
-	#Change standard out to hw_output
-	sys.stdout = hw_output
+	#Make output logger and set as stdout
+	output = utils.output.PrintLogger(end='')
+	sys.stdout = output
 
 	try:
 	    exec(parsed,env) #exectute students code.
 	except Exception as e:
 	    self._exception_handler(e)
+	finally:
+	    #Reset standard out
+	    sys.stdout = sys.__stdout__
 	    
-	#Reset standard out
-	sys.stdout = sys.__stdout__
-	
-	return env,hw_output
+	return env,output
 	    
     def _exception_handler(self,e):
-	#Reset stdout
-	sys.stdout = sys.__stdout__
 	#Print error message
 	err_str = "EXPECTION EXECUTING CODE: {}".format(e)
 	utils.output.PROGRESS_LOG.error(err_str)
 	#Get string traceback
-	error_output = utils.output.PrintLogger()
+	error_output = StringIO.String()
 	traceback.print_exc(file=error_output)
-	error_output.write_file('output.txt')
-	raise GraderException(str(error_output))
+	raise GraderException(error_output.getvalue())
