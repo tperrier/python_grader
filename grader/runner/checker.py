@@ -4,15 +4,16 @@ import equals, vector, runner
 
 class EqualsProblem(object):
 
-    def __init__(self,name,checks,points=None,env=None):
+    def __init__(self,name,checks,points=None,env=None,style=0):
         self.name = name
         self.checks = checks
         points = points if points is not None else len(self.checks)
         self.points = float(points)
+        self.style = float(style)
         self.env = env if env is not None else {}
 
     def check(self,env):
-        print utils.output.colorify(self.name,'blue')
+        print utils.output.colorify('\n'+self.name,'blue')
 
         #No tests to run so 0 points
         if len(self.checks) == 0:
@@ -34,13 +35,15 @@ class EqualsProblem(object):
                 correct +=1
         total = correct*self.points/len(self.checks)
 
-        print utils.output.colorify('\tCorrectness: {}/{}\n'.format(total,self.points),'green')
-        return total,self.points
+        print utils.output.colorify('\tCorrectness: {}/{}'.format(total,self.points),'green')
+        if self.style != 0:
+            print utils.output.colorify('\tStyle: */{}'.format(self.style),'green')
+        return total,self.points,self.style
 
 
 def check_problems(problem_list,env):
 
-    total = vector.Vector(0,0)
+    total = vector.Vector(0,0,0)
 
     try:
         for problem in problem_list:
