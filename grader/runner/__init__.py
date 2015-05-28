@@ -1,3 +1,3 @@
 #!/usr/bin/python
 from runner import BaseRunner, NodeRemover, GraderException
-import checker
+from checker import CheckerProblem, EqualsCheck as EC ,OutputCheck as OC

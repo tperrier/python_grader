@@ -4,7 +4,7 @@ import abc #abstract base class
 import traceback,sys,StringIO
 
 import grader.utils as utils
-import checker
+import checker, vector
 
 class GraderException(Exception):
     
@@ -168,7 +168,10 @@ class BaseRunner(object):
 	sys.stdout = feedback
 	
 	try:
-	    total = checker.check_problems(self.get_problems(),env)
+	    total = vector.Vector(0,0,0)
+	    for test in self.get_problems():
+		total += test.check(env,output)
+	  
 	except Exception as e:
 	    raise GraderCheckerError(e,feedback=feedback,output=output)
 	finally:
