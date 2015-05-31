@@ -15,7 +15,7 @@ class GraderException(Exception):
 	err_str = self.ERROR_STR.format(err=e)
 	utils.output.PROGRESS_LOG.error(err_str)
 	
-	#Get string traceback
+	#Get traceback as string
 	error_output = StringIO.StringIO()
 	traceback.print_exc(file=error_output)
 	

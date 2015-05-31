@@ -155,7 +155,6 @@ def grade_student(args,submission_path):
                 errors_fp.writelines(err_msg)
             
             if not os.path.isfile('notes.txt'):
-                print 'Making notes.txt',os.getcwd()
                 with open('notes.txt','a') as notes_fp:
                     notes_fp.write('{}\n'.format(submission_path))
         else:
@@ -187,15 +186,11 @@ def copy_feedback_and_remove(args,feedback_path):
     if os.path.exists(feedback_path):
         if not args.quite:
             utils.output.verify("Are you sure you want to overwrite existing feedback for this student?")
-            utils.dirs.ensure_directory_exists(feedback_path)
     else:
         utils.dirs.ensure_directory_exists(feedback_path)
 
     #Copy export_files to feedback_path
-    try:
-        utils.dirs.copy_all(args.grading_sandbox,feedback_path,*args.grade.export_files)
-    except IOError as e:
-        utils.output.PROGRESS_LOG.warn(str(e))
+    utils.dirs.copy_all(args.grading_sandbox,feedback_path,*args.grade.export_files)
 
     #Delete generated files
     files_to_delete = args.grade.solution_files | args.grade.generated_files | args.grade.export_files

@@ -36,14 +36,13 @@ def copy_all(src_parent_path, dst_parent_path, *paths):
     for path in paths:
         src_path = os.path.join(src_parent_path, path)
         if not os.path.exists(src_path):
-            raise IOError('Could not copy. File or folder DNE: {0}'.format(src_path))
+            print output.colorify('Could not copy. File or folder DNE: {0}'.format(src_path),'warning')
         elif os.path.isfile(src_path):
             shutil.copy2(src_path, dst_parent_path)
         elif os.path.isdir(src_path):
             if os.path.exists(dst_parent_path):
                 shutil.rmtree(dst_parent_path)
             dst_path = os.path.join(dst_parent_path,os.path.basename(src_path))
-            print src_path,dst_path
             shutil.copytree(src_path, dst_path)
 
 def remove_all(parent_path,*paths):
