@@ -248,7 +248,7 @@ def process_survey(args):
 
     def get_submission_folder(folder_name):
         for submission_path in feedback_folders:
-            if submission_path.endswith(folder_name) or submission_path.endswith(folder_name+'_FIXED'):
+            if folder_name in submission_path:
                 print submission_path
                 return submission_path
 
