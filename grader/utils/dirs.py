@@ -3,16 +3,18 @@
 import os,shutil
 import output
 
-def get_sub_directories(*paths):
+def get_sub_directories(*paths,**kwargs):
     '''
     
     '''
+    filter = kwargs.get('filter',None)
     sub_dirs = []
     for path in paths:
         if not os.path.isdir(path):
             continue #short circuit if not a directory 
         for sub in next(os.walk(path))[1]:
-            sub_dirs.append(os.path.join(path,sub))
+            if filter is None or filter(sub):
+                sub_dirs.append(os.path.join(path,sub))
     return sub_dirs
 
 def ensure_directory_exists(path):

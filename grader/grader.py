@@ -80,11 +80,12 @@ def grade_submissions(args):
     if args.target:
         submission_folders = args.target[:]
     elif args.submissions_folder:
-        submission_folders = utils.dirs.get_sub_directories(os.path.join(args.submission_dir,args.submissions_folder))
+        section_folder = os.path.join(args.submission_dir,args.submissions_folder)
+        submission_folders = utils.dirs.get_sub_directories(section_folder,filter=filter_skipped)
     else: #default to all folders inside SUBMISSIONS_DIR
         #Get all subdirectories of SUBMISSION_DIR
         section_folders = utils.dirs.get_sub_directories(args.submission_dir)
-        submission_folders = utils.dirs.get_sub_directories(*section_folders)
+        submission_folders = utils.dirs.get_sub_directories(*section_folders,filter=filter_skipped)
 
     create_sandbox(args)
 
@@ -212,6 +213,9 @@ def student_from_submission_dir(path):
 
     dir_split = tail.split('_')
     return (dir_split[0],dir_split[1]+os.path.abspath(path))
+    
+def filter_skipped(folder):
+    return not folder.endswith('_skip')
 
 
 def from_gradeit(form_txt):
