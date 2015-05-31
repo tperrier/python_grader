@@ -57,11 +57,19 @@ class EqualsCheck(BaseCheck):
         self.cmp_obj = cmp_obj
         
     def check(self,env,output):
-        test_obj = eval(self.eval_str,None,env)
-        check = equals.eq(test_obj,self.cmp_obj)
+        err_str = None
+        try:
+            test_obj = eval(self.eval_str,None,env)
+            check = equals.eq(test_obj,self.cmp_obj)
+        except Exception as e:
+            check = None
+            err_str = str(e)
 
         print '\tassert {}'.format(self.eval_str),
-        if not check:
+        if check is None: #There was an exception 
+            print '  (EXCEPTION!)\n\t *** {} ***'.format(err_str)
+            return False
+        elif not check:
             print '  (FAIL!)\n\t  {} != {}'.format(test_obj,self.cmp_obj)
             return False
         else:
