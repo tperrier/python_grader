@@ -68,7 +68,7 @@ class PrintLogger:
 	self.output = []
 	
     def __str__(self):
-	return ''.join(self.output)
+	return ''.join(remove_color(line) for line in self.output)
 
     def __call__(self,*messages,**kwargs):
 	self.log(*messages,**kwargs)

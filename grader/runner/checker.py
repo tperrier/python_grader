@@ -22,17 +22,20 @@ class CheckerProblem(object):
             print '\tNo tests'
             return 0,self.points,self.style
             
-        #update environment
-        env.update(copy.deepcopy(self.env))
+        #Create new local environment 
+        local_env = copy.copy(env)
+        #Add problem globals to the environment 
+        local_env.update(copy.deepcopy(self.env))
         correct,pos = 0,0
         for test in self.tests:
             if isinstance(test,OutputCheck):
-                check_pass,pos = self.check(env,output,pos=pos)
+                check_pass,pos = test.check(local_env,output,pos=pos)
+                correct += 1 if check_pass else 0
             else:
-                correct += 1 if test.check(env,output) else 0
+                correct += 1 if test.check(local_env,output) else 0
         total = correct*self.points/len(self.tests)
 
-        print utils.output.colorify('\tCorrectness: {}/{}'.format(total,self.points),'green')
+        print utils.output.colorify('\tCorrectness: {}/{}'.format(round(total,2),self.points),'green')
         if self.style != 0:
             print utils.output.colorify('\tStyle: */{}'.format(self.style),'green')
         print ''
@@ -54,8 +57,59 @@ class EqualsCheck(BaseCheck):
         self.cmp_obj = cmp_obj
         
     def check(self,env,output):
-        main_obj = eval(self.eval_str,None,env)
-        check = equals.eq(main_obj,self.cmp_obj)
+        test_obj = eval(self.eval_str,None,env)
+        check = equals.eq(test_obj,self.cmp_obj)
+
+        print '\tassert {}'.format(self.eval_str),
+        if not check:
+            print '  (FAIL!)\n\t  {} != {}'.format(test_obj,self.cmp_obj)
+            return False
+        else:
+            print '  (OK)'
+            return True
+        
+class OutputCheck(BaseCheck):
+    
+    def __init__(self,regex_str,label=None,consume=True,**kwargs):
+        self.regex_str = regex_str
+        self.label = label if label else regex_str
+        self.consume = consume
+        self.regex_groups = kwargs
+        
+    def check(self,env,output,pos=0):
+        match = re.search(self.regex_str,output[pos:],re.M)
+        print '\toutput: %s'%self.label,
+        if match:
+            groups = match.groupdict()
+            next_pos = pos+match.end() if self.consume else pos
+            #First check all groups if they exist
+            if len(self.regex_groups) != 0 and len(groups) != 0:
+                #Compare equality on groups
+                for key,value in self.regex_groups.iteritems():
+                    if not equals.eq(groups[key],value):
+                        print '  (NOT FOUND)'
+                        return False, next_pos
+            print '  (OK)'
+            return True, next_pos
+        else:
+            print '  (NOT FOUND)'
+            return False,pos
+
+class SolutionCheck(BaseCheck):
+    
+    def __init__(self,eval_str,solution_env):
+        self.eval_str = eval_str
+        self.solution_env = solution_env
+        
+    def check(self,env,output):
+        test_obj = eval(self.eval_str,None,env)
+        
+        #Replace environment with solution environment
+        solution_env = copy.copy(env)
+        solution_env.update(self.solution_env)
+        solution_obj = eval(self.eval_str,None,solution_env)
+        
+        check = equals.eq(test_obj,solution_obj)
 
         print '\tassert {}'.format(self.eval_str),
         if not check:
@@ -64,47 +118,3 @@ class EqualsCheck(BaseCheck):
         else:
             print '  (OK)'
             return True
-        
-class OutputCheck(BaseCheck):
-    
-    def __init__(self,eval_str,regex,consume=True,pos=0,**kwargs):
-        self.regex = regex
-        self.consume = consume
-        self.regex_groups = kwargs
-        
-    def check(self,env,output):
-        match = self.regex.search(output[pos:],re.M)
-        if match:
-            groups = match.groupdict()
-            next_pos = pos+match.end() if self.consueme else pos
-            #First check all groups if they exist
-            if len(self.regex_groups) != 0 and len(groups) != 0:
-                #Compare equality on groups
-                for key,value in self.regex_groups.iteritems():
-                    if not equals.eq(groups[key],value):
-                        return False, next_pos
-            return True, next_pos
-        else:
-            return False,pos
-
-def check_problems(problem_list,env):
-
-    total = vector.Vector(0,0,0)
-
-    try:
-        for problem in problem_list:
-            total += problem.check(env)
-    except Exception as e:
-        #Reset stdout
-        sys.stdout = sys.__stdout__
-        #Print Error message
-        err_str = "EXPECTION RUNNING CODE {}".format(e)
-        utils.output.PROGRESS_LOG(err_str,color='error')
-
-        #Get string traceback
-        error_output = utils.output.PrintLogger()
-        traceback.print_exc(file=error_output)
-        error_output.write_file('output.txt')
-        raise runner.GraderException(str(error_output))
-
-    return total
