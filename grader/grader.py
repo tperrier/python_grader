@@ -92,7 +92,7 @@ def grade_submissions(args):
     for i,submission_path in enumerate(submission_folders):
 
         # Print Header
-        progress_msg = 'Preparing to grade student {1}/{2} ({0})...'.format(submission_path, i, len(submission_folders))
+        progress_msg = 'Preparing to grade student {1}/{2} ({0})...'.format(submission_path, i+1, len(submission_folders))
         utils.output.PROGRESS_LOG.header(progress_msg)
 
         errors = grade_student(args,submission_path)

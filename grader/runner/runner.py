@@ -33,8 +33,8 @@ class GraderSyntaxError(GraderException):
 class GraderRunTimeError(GraderException):
     pass
     
-class GraderCheckerError(GraderException):
-    ERROR_STR = "EXCEPTION CHECKING CODE: {err}"
+class GraderExecuteError(GraderException):
+    ERROR_STR = "EXCEPTION EXECUTING CODE: {err}"
 
 class NodeRemover(ast.NodeTransformer):
     
@@ -73,15 +73,17 @@ class BaseRunner(object):
     # All files that students submit - these are copied from submissions/ta_name
     solution_files = set()
     
-    # Main file to run and grade 
+    # Filename for python script to get output from
+    # Defaults to env_file
     @abc.abstractproperty
     def main_file(self):
-	return 'FILE NAME OF DEFAULT FILE TO EXECUTE'
+	return 'FILENAME OF DEFAULT MAIN FILE'
+
+    # Filename for python script to get environment from
+    @abc.abstractproperty
+    def env_file(self):
+	return self.main_file
     
-    # Add code to bottom of main file
-    run_main = False
-    append_code = ''
-	
     # List of functions calls to remove from abstract syntax tree of parsed code
     remove_func_list = set()
 
@@ -122,25 +124,15 @@ class BaseRunner(object):
     def __init__(self,show_feedback=False):
 	self.show_feedback = show_feedback
 	
-    def run_hw(self,file_name=None):
-	'''Runs self.main_file and returns the environment and output '''
-	if file_name is None:
-	    file_name = self.main_file
-	
-	if self.run_main:
-	    if isinstance(self.append_code,basestring):
-		self.append_code += '\nmain()'
-	    else:
-		self.append_code = 'main()'
-	
-	if self.append_code:
-	    with open(self.main_file,'a') as fp:
-		fp.write('\n'+self.append_code)
-	
-	#Parse file into abstract syntax tree
+    def run_hw(self):
+	''' Main homework runner
+	Runs self.env_file and returns the environment.
+	Runs self.main_file and returns the output.
+	'''
+	#Parse env file into abstract syntax tree
 	try:
-	    tree = self.ParserClass(file_name,self.remove_func_list).remove()
-	    parsed = compile(tree,filename=file_name,mode='exec')
+	    tree = self.ParserClass(self.env_file,self.remove_func_list).remove()
+	    parsed = compile(tree,filename=self.env_file,mode='exec')
 	except Exception as e:
 	    raise GraderSyntaxError(e)
 	    
@@ -151,13 +143,26 @@ class BaseRunner(object):
 	output = utils.output.PrintLogger(end='')
 	sys.stdout = output
 	
-	#Try to execute the abstract syntax tree
+	if self.env_file != self.main_file:
+	    # Enviornment File and Main File are different
+	    # Execute the enviornment file and then get output from main_file
+	    try:
+		exec(parsed,env) #execute students code into environment
+	    except Exception as e:
+		# Reset standard out
+		sys.stdout = sys.__stdout__
+		raise GraderExecuteError(e,output=output)
+		
+	    # Set parsed to main_file to get output from
+	    parsed = open(self.main_file,'r')
+	
+	#Try to execute the abstract syntax tree or main_file
 	try:
 	    exec(parsed,env) #exectute students code.
 	except Exception as e:
 	    raise GraderRunTimeError(e,output=output)
 	finally:
-	    #Reset standard out
+	    # Reset standard out
 	    sys.stdout = sys.__stdout__
 	    
 	return env,output
