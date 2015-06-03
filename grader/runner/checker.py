@@ -1,4 +1,4 @@
-import sys,traceback,copy,abc,re
+import sys,traceback,copy,abc,re,inspect
 
 import grader.utils as utils
 import equals, runner
@@ -126,3 +126,31 @@ class SolutionCheck(BaseCheck):
         else:
             print '  (OK)'
             return True
+            
+class MethodCheck(BaseCheck):
+    
+    def __init__(self,method_name,nargs,varargs=None,keywords=None):
+        self.method_name = method_name
+        self.nargs,self.varargs,self.keywords = nargs,varargs,keywords
+        
+    def check(self,env,output):
+        
+        print '\tcheck method {0.method_name} args: {0.nargs}'.format(self),
+        try:
+            func = env[self.method_name]
+        except KeyError as e:
+            print '  (FAIL!)\n\t  {0.method_name} does not exist!'
+            return False
+        
+        arg_spec = inspect.getargspec(func)
+        
+        if len(arg_spec.args) != self.nargs:
+            print '  (FAIL!)\n\t found {} arguments expected {}'.format(len(arg_spec.args),self.nargs)
+            return False
+        elif bool(self.varargs) != bool(arg_spec.varargs) or bool(self.keywords) != bool(arg_spec.keywords):
+            print '  (FAIL!)\n\t invalid *args ({}) or **kwargs ({})'.format(arg_spec.varargs,arg_spec.keywords)
+            return False
+        else:
+            print '  (OK)'
+            return True
+            

@@ -80,7 +80,7 @@ class BaseRunner(object):
 	return 'FILENAME OF DEFAULT MAIN FILE'
 
     # Filename for python script to get environment from
-    @abc.abstractproperty
+    @property
     def env_file(self):
 	return self.main_file
     
@@ -156,7 +156,7 @@ class BaseRunner(object):
 	    # Set parsed to main_file to get output from
 	    parsed = open(self.main_file,'r')
 	
-	#Try to execute the abstract syntax tree or main_file
+	#Execute main_file
 	try:
 	    exec(parsed,env) #exectute students code.
 	except Exception as e:
