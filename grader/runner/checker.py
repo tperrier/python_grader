@@ -1,4 +1,6 @@
-import sys,traceback,copy,abc,re,inspect
+import sys,copy,abc,re,inspect
+import traceback,linecache
+import code
 
 import grader.utils as utils
 import equals, runner
@@ -49,6 +51,24 @@ class BaseCheck(object):
     @abc.abstractmethod
     def check(self,env,output):
         return 'Run the check'
+        
+    @staticmethod
+    def fail(answer,solution):
+        answer,solution = str(answer), str(solution)
+        if len(answer) < 25 and len(solution) < 25:
+            return '  (FAIL!)\n\t  {} != {}'.format(answer,solution)
+        else:
+            return '  (FAIL!)\n\tA: {}\n\tS: {}'.format(answer[:100],solution[:100])
+            
+    @staticmethod
+    def get_error_str():
+        #From: http://stackoverflow.com/questions/14519177/python-exception-handling-line-number/20264059#20264059
+        exc_type, exc_obj, tb = sys.exc_info()
+        stack = traceback.extract_tb(tb)
+        filename, lineno, func_name, line = stack[-1]
+        return '\t  {}.{} at line {} "{}"\n\t  {}: {}'.format(filename,func_name,lineno,line.strip(),exc_obj.__class__.__name__, exc_obj)
+
+
     
 class EqualsCheck(BaseCheck):
     
@@ -57,20 +77,20 @@ class EqualsCheck(BaseCheck):
         self.cmp_obj = cmp_obj
         
     def check(self,env,output):
-        err_str = None
         try:
             test_obj = eval(self.eval_str,None,env)
-            check = equals.eq(test_obj,self.cmp_obj)
         except Exception as e:
             check = None
-            err_str = str(e)
+            err_str = self.get_error_str()
+        else:
+            check = equals.eq(test_obj,self.cmp_obj)
 
         print '\tassert {}'.format(self.eval_str),
         if check is None: #There was an exception 
-            print '  (EXCEPTION!)\n\t *** {} ***'.format(err_str)
+            print '  (EXCEPTION!)\n\{}'.format(err_str)
             return False
         elif not check:
-            print '  (FAIL!)\n\t  {} != {}'.format(test_obj,self.cmp_obj)
+            print self.fail(test_obj,self.cmp_obj)
             return False
         else:
             print '  (OK)'
@@ -110,18 +130,27 @@ class SolutionCheck(BaseCheck):
         self.solution_env = solution_env
         
     def check(self,env,output):
-        test_obj = eval(self.eval_str,None,env)
         
         #Replace environment with solution environment
         solution_env = copy.copy(env)
-        solution_env.update(self.solution_env)
+        #Update with the __dict__ of solution
+        solution_env.update(self.solution_env.__dict__)
         solution_obj = eval(self.eval_str,None,solution_env)
         
-        check = equals.eq(test_obj,solution_obj)
+        try:
+            test_obj = eval(self.eval_str,None,env)
+        except Exception as e:
+            check = None
+            err_str = self.get_error_str()
+        else:
+            check = equals.eq(test_obj,solution_obj)
 
         print '\tassert {}'.format(self.eval_str),
-        if not check:
-            print '  (FAIL!)\n\t  {} != {}'.format(out,result)
+        if check is None:
+            print '  (EXCEPTION!)\n{}'.format(err_str)
+            return False
+        elif not check:
+            print self.fail(out,result)
             return False
         else:
             print '  (OK)'
