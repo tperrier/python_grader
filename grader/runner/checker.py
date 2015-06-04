@@ -62,14 +62,17 @@ class BaseCheck(object):
             
     @staticmethod
     def get_error_str():
-        #From: http://stackoverflow.com/questions/14519177/python-exception-handling-line-number/20264059#20264059
+        # From: http://stackoverflow.com/a/6961861/2708328
         exc_type, exc_obj, tb = sys.exc_info()
+        
+        # Get the last frame on the error stack
         stack = traceback.extract_tb(tb)
         filename, lineno, func_name, line = stack[-1]
-        return '\t  {}.{} at line {} "{}"\n\t  {}: {}'.format(filename,func_name,lineno,line.strip(),exc_obj.__class__.__name__, exc_obj)
+        
+        return '\t  {}.{} at line {} "{}"\n\t  {}: {}'.format(
+            filename,func_name,lineno,line.strip(),exc_obj.__class__.__name__, exc_obj
+        )
 
-
-    
 class EqualsCheck(BaseCheck):
     
     def __init__(self,eval_str,cmp_obj):
@@ -150,7 +153,7 @@ class SolutionCheck(BaseCheck):
             print '  (EXCEPTION!)\n{}'.format(err_str)
             return False
         elif not check:
-            print self.fail(out,result)
+            print self.fail(test_obj,solution_obj)
             return False
         else:
             print '  (OK)'

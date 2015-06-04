@@ -23,11 +23,16 @@ def eq(student, answer):
         return eq_float(student, answer)
     elif type(student) == str:
         return eq_str(student, answer)
+    elif type(student) == list:
+        return eq_list(student,answer)
+    elif type(student) == set:
+        return eq(list(student),list(answer))
+    
+    # Return equality as default - this should be False
+    return student == answer
 
 def eq_dict(student, answer):
-    # In this assignment, keys will never be float, so this 
-    # comparison is okay.
-    if set(student.keys()) != set(answer.keys()):
+    if not eq(student.keys(),answer.keys()):
         return False
 
     for key in student:
@@ -42,3 +47,18 @@ def eq_float(student, answer):
 
 def eq_str(student, answer):
     return student == answer
+    
+def eq_list(student,answer):
+    
+    if len(student) != len(answer):
+        return False
+    
+    # Loop through all elemets and compare equality
+    for s,a in zip(student,answer):
+        if not eq(s,a):
+            break # Exit for loop and do not run else
+    else:
+        # Return true if for loop does not break
+        return True
+        
+    return False
