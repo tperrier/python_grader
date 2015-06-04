@@ -4,7 +4,7 @@ import abc #abstract base class
 import traceback,sys,StringIO,copy,code
 
 import grader.utils as utils
-import checker, vector
+import checker, collections
 
 class GraderException(Exception):
     
@@ -117,7 +117,7 @@ class BaseRunner(object):
         self.make_header(feedback,total)
         
         if not self.show_feedback:
-            utils.output.PROGRESS_LOG('Total: {0[0]}/{0[1]}'.format(total),color='green')
+            utils.output.PROGRESS_LOG('Total: {0[points]}/{0[total]}'.format(total),color='green')
        
         return feedback,output
     
@@ -172,7 +172,7 @@ class BaseRunner(object):
 	feedback = utils.output.PrintLogger(enable=show_feedback or self.show_feedback)
 	sys.stdout = feedback
 	str_output = str(output)
-	total = vector.Vector()
+	total = collections.Counter()
 	for test in self.get_problems():
 	    total += test.check(env,str_output)
 
@@ -180,6 +180,6 @@ class BaseRunner(object):
 	sys.stdout = sys.__stdout__
 	    
 	#Round total points
-	total = vector.Vector(round(total[0],2),*total[1:])
+	total['points'] = round(total['points'],2)
 	
 	return feedback,total

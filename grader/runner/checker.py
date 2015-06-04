@@ -1,5 +1,5 @@
 import sys,copy,abc,re,inspect
-import traceback,linecache
+import traceback,linecache,collections
 import code
 
 import grader.utils as utils
@@ -12,7 +12,7 @@ class CheckerProblem(object):
         self.tests = tests
         self.env = env if env is not None else {}
         self.points = points if points is not None else len(tests)
-        self.extra_points = extra_points if extra_points is not None else {}
+        self.extra_points = [ (e[0].lower(),e[1]) for e in extra_points ] if extra_points is not None else []
         
     def check(self,env,output):
         
@@ -37,10 +37,10 @@ class CheckerProblem(object):
         total = correct*self.points/len(self.tests)
 
         print utils.output.colorify('\tCorrectness: {}/{}'.format(round(total,2),self.points),'green')
-        for label,points in self.extra_points.items():
+        for label,points in self.extra_points:
             print utils.output.colorify('\t{}: */{}'.format(label.capitalize(),points),'green')
         print ''
-        return vector.Vector(total,self.points,*[points for _,points in self.extra_points.items()])
+        return collections.Counter(total=total,points=self.points,**dict(self.extra_points))
             
 class BaseCheck(object):
     
@@ -87,7 +87,7 @@ class EqualsCheck(BaseCheck):
         else:
             check = equals.eq(test_obj,self.cmp_obj)
 
-        print '\tassert {}'.format(self.eval_str),
+        print '\t- assert {}'.format(self.eval_str),
         if check is None: #There was an exception 
             print '  (EXCEPTION!)\n\{}'.format(err_str)
             return False
@@ -108,7 +108,7 @@ class OutputCheck(BaseCheck):
         
     def check(self,env,output,pos=0):
         match = re.search(self.regex_str,output[pos:],re.M)
-        print '\toutput: %s'%self.label,
+        print '\t- output: %s'%self.label,
         if match:
             groups = match.groupdict()
             next_pos = pos+match.end() if self.consume else pos
@@ -147,7 +147,7 @@ class SolutionCheck(BaseCheck):
         else:
             check = equals.eq(test_obj,solution_obj)
 
-        print '\tassert {}'.format(self.eval_str),
+        print '\t- assert {}'.format(self.eval_str),
         if check is None:
             print '  (EXCEPTION!)\n{}'.format(err_str)
             return False
@@ -166,7 +166,7 @@ class MethodCheck(BaseCheck):
         
     def check(self,env,output):
         
-        print '\tcheck method {0.method_name} args: {0.nargs}'.format(self),
+        print '\t- check method {0.method_name} args: {0.nargs}'.format(self),
         try:
             func = env[self.method_name]
         except KeyError as e:
