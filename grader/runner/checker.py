@@ -3,17 +3,16 @@ import traceback,linecache
 import code
 
 import grader.utils as utils
-import equals, runner
+import equals, runner, vector
 
 class CheckerProblem(object):
     
-    def __init__(self,name,tests,points=None,env=None,style=0):
+    def __init__(self,name,tests,env=None,points=None,extra_points=None):
         self.name = name
         self.tests = tests
-        points = points if points is not None else len(self.checks)
-        self.points = float(points)
-        self.style = float(style)
         self.env = env if env is not None else {}
+        self.points = points if points is not None else len(tests)
+        self.extra_points = extra_points if extra_points is not None else {}
         
     def check(self,env,output):
         
@@ -38,10 +37,10 @@ class CheckerProblem(object):
         total = correct*self.points/len(self.tests)
 
         print utils.output.colorify('\tCorrectness: {}/{}'.format(round(total,2),self.points),'green')
-        if self.style != 0:
-            print utils.output.colorify('\tStyle: */{}'.format(self.style),'green')
+        for label,points in self.extra_points.items():
+            print utils.output.colorify('\t{}: */{}'.format(label.capitalize(),points),'green')
         print ''
-        return total,self.points,self.style
+        return vector.Vector(total,self.points,*[points for _,points in self.extra_points.items()])
             
 class BaseCheck(object):
     

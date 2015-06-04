@@ -1,4 +1,5 @@
 import code
+import itertools as it
 
 
 class Vector(tuple):
@@ -7,10 +8,17 @@ class Vector(tuple):
 	return super(Vector,cls).__new__(cls,tuple(args))
     
     def __init__(self,*args):
-	super(tuple,self).__init__(args)
+	if len(args) > 0:
+	    super(tuple,self).__init__(args)
+	    self.initalized = True
+	else:
+	    self.initalized = False
     
-    def __iadd__(self,other):
-	return Vector(*[sum(t) for t in zip(self,other)])
+    def __add__(self,other):
+	if self.initalized:
+	    return Vector(*[s+o for s,o in it.izip_longest(self,other,fillvalue=0)])
+	else:
+	    return Vector(*other)
 	
 	
 

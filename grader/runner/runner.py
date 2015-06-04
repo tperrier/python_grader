@@ -172,7 +172,7 @@ class BaseRunner(object):
 	feedback = utils.output.PrintLogger(enable=show_feedback or self.show_feedback)
 	sys.stdout = feedback
 	str_output = str(output)
-	total = vector.Vector(0,0,0)
+	total = vector.Vector()
 	for test in self.get_problems():
 	    total += test.check(env,str_output)
 
@@ -180,6 +180,6 @@ class BaseRunner(object):
 	sys.stdout = sys.__stdout__
 	    
 	#Round total points
-	total = vector.Vector(round(total[0],2),total[1],total[2])
+	total = vector.Vector(round(total[0],2),*total[1:])
 	
 	return feedback,total

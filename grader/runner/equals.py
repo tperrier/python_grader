@@ -21,8 +21,6 @@ def eq(student, answer):
         return eq_dict(student, answer)
     elif type(student) == float:
         return eq_float(student, answer)
-    elif type(student) == str:
-        return eq_str(student, answer)
     elif type(student) == list:
         return eq_list(student,answer)
     elif type(student) == set:
@@ -44,9 +42,6 @@ def eq_dict(student, answer):
 def eq_float(student, answer):
     epsilon = 0.00001
     return abs(student - answer) < epsilon
-
-def eq_str(student, answer):
-    return student == answer
     
 def eq_list(student,answer):
     
