@@ -124,7 +124,7 @@ class BaseRunner(object):
         self.make_header(feedback,total)
         
         if not self.show_feedback:
-            utils.output.PROGRESS_LOG('Total: {0[points]}/{0[total]}'.format(total),color='green')
+            utils.output.PROGRESS_LOG('Total: {0[total]}/{0[points]}'.format(total),color='green')
        
         return feedback,output
     
@@ -187,6 +187,6 @@ class BaseRunner(object):
 	sys.stdout = sys.__stdout__
 	    
 	#Round total points
-	total['points'] = round(total['points'],2)
+	total['total'] = round(total['total'],2)
 	
 	return feedback,total
