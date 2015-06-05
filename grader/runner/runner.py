@@ -37,6 +37,13 @@ class GraderExecuteError(GraderException):
     ERROR_STR = "EXCEPTION EXECUTING CODE: {err}"
 
 class NodeRemover(ast.NodeTransformer):
+    '''
+    NodeRemover Class is a subclass of ast.NodeTransformer. 
+    It parses a python file and removes all assert statements.
+    
+    Documentation for ast can be found here:
+    https://greentreesnakes.readthedocs.org/en/latest/index.html
+    '''
     
     def __init__(self,file_name,func_list):
         super(NodeRemover,self).__init__()
