@@ -107,9 +107,15 @@ class BaseRunner(object):
     def get_problems(self):
 	return 'A list of all problems to check'
     
-    @abc.abstractmethod
-    def make_header(self,feedback,total):
+    def make_header(self,total):
 	'''Make the header and prepend to feedback'''
+	return ''
+	
+    def make_footer(self):
+	'''make the footer for feedback'''
+	return ''
+	
+    
     
     def grade(self):
 	'''Main grading entry point'''
@@ -119,9 +125,12 @@ class BaseRunner(object):
         
 	#Check problems and create base feedback with a total
         feedback,total = self.check_hw(env,output)
+	
+	#Add footer to feedback
+	feedback.write(self.make_footer())
         
 	#Make the header and prepend to feedback
-        self.make_header(feedback,total)
+        feedback.prepend(self.make_header(total))
         
         if not self.show_feedback:
             utils.output.PROGRESS_LOG('Total: {0[total]}/{0[points]}'.format(total),color='green')

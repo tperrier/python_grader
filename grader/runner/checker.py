@@ -36,7 +36,7 @@ class CheckerProblem(object):
                 correct += 1 if test.check(local_env,output) else 0
         total = correct*self.points/len(self.tests)
 
-        print utils.output.colorify('\tCorrectness: {}/{}'.format(round(total,2),self.points),'green')
+        print utils.output.colorify('\tCorrectness: {:g}/{}'.format(round(total,2),self.points),'green')
         for label,points in self.extra_points:
             print utils.output.colorify('\t{}: */{}'.format(label.capitalize(),points),'green')
         print ''
