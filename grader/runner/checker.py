@@ -11,7 +11,7 @@ class CheckerProblem(object):
         self.name = name
         self.tests = tests
         self.env = env if env is not None else {}
-        self.points = points if points is not None else len(tests)
+        self.points = float(points if points is not None else len(tests))
         self.extra_points = [ (e[0].lower(),e[1]) for e in extra_points ] if extra_points is not None else []
         
     def check(self,env,output):
@@ -36,7 +36,7 @@ class CheckerProblem(object):
                 correct += 1 if test.check(local_env,output) else 0
         total = correct*self.points/len(self.tests)
 
-        print utils.output.colorify('\tCorrectness: {:g}/{}'.format(round(total,2),self.points),'green')
+        print utils.output.colorify('\tCorrectness: {:g}/{}'.format(total,self.points),'green')
         for label,points in self.extra_points:
             print utils.output.colorify('\t{}: */{}'.format(label.capitalize(),points),'green')
         print ''
@@ -67,6 +67,9 @@ class BaseCheck(object):
         # Get the last frame on the error stack
         stack = traceback.extract_tb(tb)
         filename, lineno, func_name, line = stack[-1]
+        
+        if not isinstance(line,basestring):
+            line = ''
         
         return '\t  {}.{} at line {} "{}"\n\t  {}: {}'.format(
             filename,func_name,lineno,line.strip(),exc_obj.__class__.__name__, exc_obj
