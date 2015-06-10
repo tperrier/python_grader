@@ -38,7 +38,7 @@ class CheckerProblem(object):
 
         print utils.output.colorify('\tCorrectness: {:g}/{}'.format(total,self.points),'green')
         for label,points in self.extra_points:
-            print utils.output.colorify('\t{}: */{}'.format(label.capitalize(),points),'green')
+            print utils.output.colorify('\t{}: */{}'.format(label.title(),points),'green')
         print ''
         return collections.Counter(total=total,points=self.points,**dict(self.extra_points))
             

@@ -120,7 +120,6 @@ def create_sandbox(args):
      #Create grading sandbox if needed
     if args.refresh_sandbox or not os.path.exists(args.grading_sandbox):
         utils.output.PROGRESS_LOG.header("Creating grading sandbox...")
-        utils.dirs.ensure_directory_exists(args.grading_sandbox)
         utils.dirs.copy_all(args.grading_folder, args.grading_sandbox, *args.grade.required_for_grading)
     else:
         utils.output.PROGRESS_LOG.warn("Grading sandbox exists. Assuming files required for grading are present.")
@@ -130,7 +129,7 @@ def grade_student(args,submission_path):
 
     # Copy in the solution files to grading sandbox
     utils.dirs.copy_all(submission_path, args.grading_sandbox, *args.grade.solution_files)
-
+    
     #change working directory to grading sandbox
     cwd = os.getcwd()
     os.chdir(args.grading_sandbox)
