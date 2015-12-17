@@ -30,6 +30,7 @@ def copy_all(src_parent_path, dst_parent_path, *paths):
     
     '''
     for glob_path in paths:
+        print >> sys.stderr , src_parent_path,glob_path
         src_path = os.path.join(src_parent_path, glob_path)
         for path in glob.glob(src_path):
             copy_one(path,dst_parent_path)

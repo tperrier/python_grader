@@ -55,7 +55,7 @@ def grade_errors(args):
 
             #also copy original error folder into feedback_path/original
             original_path = os.path.join(feedback_path,'original')
-            utils.dirs.copy_all(submission_path,original_path,None)
+            utils.dirs.copy_one(submission_path,original_path)
 
             #Remove original
             utils.dirs.remove_all(submission_path)
