@@ -195,17 +195,18 @@ def copy_feedback_and_remove(args,feedback_path):
     utils.dirs.remove_all(args.grading_sandbox,*files_to_delete)
 
 
-def student_from_submission_dir(path):
-    '''
-    Given the path to a student submission of the form: folder1/folder2/LASTNAME_UWID
-    Return tuple(lastname,uwid)
-    '''
-    head,tail = os.path.split(path)
-    if tail is '': #path ends with a slash
-        tail = os.path.basename(head)
-
-    dir_split = tail.split('_')
-    return (dir_split[0],dir_split[1]+os.path.abspath(path))
+# tnp: I don't think this code is used.  If everything is working after commenting it out then delete
+# def student_from_submission_dir(path):
+#     '''
+#     Given the path to a student submission of the form: folder1/folder2/LASTNAME_UWID
+#     Return tuple(lastname,uwid)
+#     '''
+#     head,tail = os.path.split(path)
+#     if tail is '': #path ends with a slash
+#         tail = os.path.basename(head)
+#
+#     dir_split = tail.split('_')
+#     return (dir_split[0],dir_split[1]+os.path.abspath(path))
 
 def filter_skipped(folder):
     return not folder.endswith('_skip')
