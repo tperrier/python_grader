@@ -3,7 +3,7 @@ import traceback,linecache,collections
 import code
 
 import grader.utils as utils
-import equals, runner, vector
+import equals, runner
 
 class CheckerProblem(object):
     
@@ -103,23 +103,26 @@ class EqualsCheck(BaseCheck):
         
 class OutputCheck(BaseCheck):
     
-    def __init__(self,regex_str,label=None,consume=True,**kwargs):
+    def __init__(self,regex_str,label=None,consume=True,convert=None, reg_options=re.I|re.M, *args):
         self.regex_str = regex_str
         self.label = label if label else regex_str
         self.consume = consume
-        self.regex_groups = kwargs
+        self.regex_solutions = args
         
     def check(self,env,output,pos=0):
-        match = re.search(self.regex_str,output[pos:],re.M)
+        match = re.search(self.regex_str,output[pos:],reg_options)
         print '\t- output: %s'%self.label,
         if match:
-            groups = match.groupdict()
+            groups = match.groups()
             next_pos = pos+match.end() if self.consume else pos
             #First check all groups if they exist
-            if len(self.regex_groups) != 0 and len(groups) != 0:
+            if len(self.regex_solutions) != 0 and len(groups) != 0:
                 #Compare equality on groups
-                for key,value in self.regex_groups.iteritems():
-                    if not equals.eq(groups[key],value):
+                for idx,value in enumerate(self.regex_solutions):
+                    answer = groups[idx]
+                    if convert is not None:
+                        answer = convert(answer)
+                    if not equals.eq(answer,value):
                         print '  (NOT FOUND)'
                         return False, next_pos
             print '  (OK)'

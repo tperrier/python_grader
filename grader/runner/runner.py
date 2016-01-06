@@ -11,21 +11,21 @@ class GraderException(Exception):
     ERROR_STR = "EXCEPTION RUNNING CODE: {err}"
     
     def __init__(self,e,**kwargs):
-	#Print error message
-	err_str = self.ERROR_STR.format(err=e)
-	utils.output.PROGRESS_LOG.error(err_str)
-	
-	#Get traceback as string
-	error_output = StringIO.StringIO()
-	traceback.print_exc(file=error_output)
-	
-	#Get feedback and output if they exist
-	self.feedback = kwargs.get('feedback',False)
-	self.output = kwargs.get('output',False)
-	
-	#Set print args
-	self.args = [error_output.getvalue()]
-	
+        #Print error message
+        err_str = self.ERROR_STR.format(err=e)
+        utils.output.PROGRESS_LOG.error(err_str)
+        
+        #Get traceback as string
+        error_output = StringIO.StringIO()
+        traceback.print_exc(file=error_output)
+        
+        #Get feedback and output if they exist
+        self.feedback = kwargs.get('feedback',False)
+        self.output = kwargs.get('output',False)
+        
+        #Set print args
+        self.args = [error_output.getvalue()]
+        
     
 class GraderSyntaxError(GraderException):
     ERROR_STR = "EXCEPTION PARSING CODE: {err}"
@@ -82,14 +82,14 @@ class BaseRunner(object):
     
     # Filename for python script to get output from
     # Defaults to env_file
-    @abc.abstractproperty
+    @property
     def main_file(self):
-	return 'FILENAME OF DEFAULT MAIN FILE'
+        return self.env_file
 
     # Filename for python script to get environment from
-    @property
+    @abc.abstractproperty
     def env_file(self):
-	return self.main_file
+        return 'FILENAME OF DEFAULT HOMEWORK ENVIRONMENT'
     
     # List of functions calls to remove from abstract syntax tree of parsed code
     remove_func_list = set()
@@ -105,31 +105,31 @@ class BaseRunner(object):
     
     @abc.abstractmethod
     def get_problems(self):
-	return 'A list of all problems to check'
+        return 'A list of all problems to check'
     
     def make_header(self,total):
-	'''Make the header and prepend to feedback'''
-	return ''
-	
+        '''Make the header and prepend to feedback'''
+        return ''
+        
     def make_footer(self):
-	'''make the footer for feedback'''
-	return ''
-	
+        '''make the footer for feedback'''
+        return ''
+        
     
     
     def grade(self):
-	'''Main grading entry point'''
-	
-	#Run main file and parse into env with stdout going to output
+        '''Main grading entry point'''
+        
+        #Run main file and parse into env with stdout going to output
         env,output = self.run_hw()
         
-	#Check problems and create base feedback with a total
+        #Check problems and create base feedback with a total
         feedback,total = self.check_hw(env,output)
-	
-	#Add footer to feedback
-	feedback.write(self.make_footer())
         
-	#Make the header and prepend to feedback
+        #Add footer to feedback
+        feedback.write(self.make_footer())
+        
+        #Make the header and prepend to feedback
         feedback.prepend(self.make_header(total))
         
         if not self.show_feedback:
@@ -138,64 +138,64 @@ class BaseRunner(object):
         return feedback,output
     
     def __init__(self,show_feedback=False):
-	self.show_feedback = show_feedback
-	
+        self.show_feedback = show_feedback
+        
     def run_hw(self):
-	''' Main homework runner
-	Runs self.env_file and returns the environment.
-	Runs self.main_file and returns the output.
-	'''
-	#Parse env file into abstract syntax tree
-	try:
-	    tree = self.ParserClass(self.env_file,self.remove_func_list).remove()
-	    parsed = compile(tree,filename=self.env_file,mode='exec')
-	except Exception as e:
-	    raise GraderSyntaxError(e)
-	    
-	#Execute file into black environment
-	#Make name space for student code to execute in
-	env = {}
-	#Make output logger and set as stdout
-	output = utils.output.PrintLogger(end='')
-	sys.stdout = output
-	
-	if self.env_file != self.main_file:
-	    # Enviornment File and Main File are different
-	    # Execute the enviornment file and then get output from main_file
-	    try:
-		exec(parsed,env) #execute students code into environment
-	    except Exception as e:
-		# Reset standard out
-		sys.stdout = sys.__stdout__
-		raise GraderExecuteError(e,output=output)
-		
-	    # Set parsed to main_file to get output from
-	    parsed = open(self.main_file,'r')
-	
-	#Execute main_file
-	try:
-	    exec(parsed,env) #exectute students code.
-	except Exception as e:
-	    raise GraderRunTimeError(e,output=output)
-	finally:
-	    # Reset standard out
-	    sys.stdout = sys.__stdout__
-	    
-	return env,output
-	
+        ''' Main homework runner
+        Runs self.env_file and returns the environment.
+        Runs self.main_file and returns the output.
+        '''
+        #Parse env file into abstract syntax tree
+        try:
+            tree = self.ParserClass(self.env_file,self.remove_func_list).remove()
+            parsed = compile(tree,filename=self.env_file,mode='exec')
+        except Exception as e:
+            raise GraderSyntaxError(e)
+            
+        #Execute file into black environment
+        #Make name space for student code to execute in
+        env = {}
+        #Make output logger and set as stdout
+        output = utils.output.PrintLogger(end='')
+        sys.stdout = output
+        
+        if self.env_file != self.main_file:
+            # Enviornment File and Main File are different
+            # Execute the enviornment file and then get output from main_file
+            try:
+                exec(parsed,env) #execute students code into environment
+            except Exception as e:
+                # Reset standard out
+                sys.stdout = sys.__stdout__
+                raise GraderExecuteError(e,output=output)
+                
+            # Set parsed to main_file to get output from
+            parsed = open(self.main_file,'r')
+        
+        #Execute main_file
+        try:
+            exec(parsed,env) #exectute students code.
+        except Exception as e:
+            raise GraderRunTimeError(e,output=output)
+        finally:
+            # Reset standard out
+            sys.stdout = sys.__stdout__
+            
+        return env,output
+        
     def check_hw(self,env,output,show_feedback=False):
-	'''Checks all hw problems'''
-	feedback = utils.output.PrintLogger(enable=show_feedback or self.show_feedback)
-	sys.stdout = feedback
-	str_output = str(output)
-	total = collections.Counter()
-	for test in self.get_problems():
-	    total += test.check(env,str_output)
+        '''Checks all hw problems'''
+        feedback = utils.output.PrintLogger(enable=show_feedback or self.show_feedback)
+        sys.stdout = feedback
+        str_output = str(output)
+        total = collections.Counter()
+        for test in self.get_problems():
+            total += test.check(env,str_output)
 
-	#Reset standard out
-	sys.stdout = sys.__stdout__
-	    
-	#Round total points
-	total['total'] = round(total['total'],2)
-	
-	return feedback,total
+        #Reset standard out
+        sys.stdout = sys.__stdout__
+            
+        #Round total points
+        total['total'] = round(total['total'],2)
+        
+        return feedback,total
