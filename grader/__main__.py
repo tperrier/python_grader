@@ -4,6 +4,7 @@ import os,sys,argparse
 #local imports
 import utils,grader
 
+''' Main invokation of grading scripts '''
 
 def make_argument_parser():
     parser = argparse.ArgumentParser()
@@ -42,6 +43,14 @@ if __name__ == '__main__':
     #Set sandbox folder
     args.grading_sandbox = os.path.join(args.grading_folder,'sandbox')
 
+    # Check that grading folder and submission folder exisit
+    if not os.path.exists(args.grading_folder):
+        print utils.output.warn('Grading folder "%s" Not Found'%args.grading_folder)
+        sys.exit()
+    if not os.path.exists(args.submission_dir):
+        print utils.output.warn('Submission folder "%s" Not Found'%args.submission_dir)
+        sys.exit()
+
     # Process survey and exit if --survey flag set
     if args.survey:
         print "Processing HW survey...."
@@ -59,4 +68,3 @@ if __name__ == '__main__':
         grader.grade_errors(args)
     else: #default grade all submissions
         grader.grade_submissions(args)
-
