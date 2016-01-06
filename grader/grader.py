@@ -9,7 +9,6 @@ from runner import GraderException
 def grade_errors(args):
 
     #Get submission folders:
-    #Get submission folders
     if args.target:
         errors_dirs = args.target[:]
     elif args.submissions_folder:
@@ -129,7 +128,7 @@ def grade_student(args,submission_path):
 
     # Copy in the solution files to grading sandbox
     utils.dirs.copy_all(submission_path, args.grading_sandbox, *args.grade.solution_files)
-    
+
     #change working directory to grading sandbox
     cwd = os.getcwd()
     os.chdir(args.grading_sandbox)
@@ -148,11 +147,11 @@ def grade_student(args,submission_path):
             #Write output and feedback if they exist
             e.feedback.write_file('feedback.txt') if e.feedback else False
             e.output.write_file('output.txt') if e.output else False
-            
+
             #Write errors.txt
             with(open('errors.txt','w')) as errors_fp:
                 errors_fp.writelines(err_msg)
-            
+
             if not os.path.isfile('notes.txt'):
                 with open('notes.txt','a') as notes_fp:
                     notes_fp.write('{}\n'.format(submission_path))
@@ -198,7 +197,7 @@ def copy_feedback_and_remove(args,feedback_path):
 
 def student_from_submission_dir(path):
     '''
-    Given the path to a student submission on the form: folder1/folder2/LASTNAME_UWID
+    Given the path to a student submission of the form: folder1/folder2/LASTNAME_UWID
     Return tuple(lastname,uwid)
     '''
     head,tail = os.path.split(path)
@@ -207,7 +206,7 @@ def student_from_submission_dir(path):
 
     dir_split = tail.split('_')
     return (dir_split[0],dir_split[1]+os.path.abspath(path))
-    
+
 def filter_skipped(folder):
     return not folder.endswith('_skip')
 
@@ -240,7 +239,7 @@ def process_survey_row(header,row):
 
 
 def process_survey(args):
-    #Get all subdirectories of FEEDBACK_DIR
+    #Get all subdirectories of FEEDBACK_DIR except the errors directory
     feedback_folders = []
     for path,dirs,files in os.walk(args.feedback_dir):
         feedback_folders.extend([os.path.join(path,f) for f in dirs if not f.endswith('errors')])
