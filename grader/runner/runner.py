@@ -83,11 +83,8 @@ class BaseRunner(object):
     # All files that students submit - these are copied from submissions/ta_name
     solution_files = set()
 
-    # Filename for python script to get output from
-    # Defaults to env_file
-    @property
-    def main_file(self):
-        return self.env_file
+    # Set this to true if the hw uses __name__ == "__main__"
+    has_main = False
 
     # Filename for python script to get environment from
     @abc.abstractproperty
@@ -160,18 +157,18 @@ class BaseRunner(object):
         output = utils.output.PrintLogger(end='')
         sys.stdout = output
 
-        if self.env_file != self.main_file:
-            # Enviornment File and Main File are different so run main file in student environment
+        if self.has_main:
+            # Has a main function so use that for output
             try:
                 # Exeute student code into environment
                 exec(parsed,env)
             except Exception as e:
-                # Reset standard out
+                # Reset standard out on error
                 sys.stdout = sys.__stdout__
                 raise GraderExecuteError(e,output=output)
 
-            # Set parsed to main_file to get output from
-            parsed = open(self.main_file,'r')
+            # Set parsed to the string main() to run main function
+            parsed = 'main()'
 
         #Execute main_file
         try:
