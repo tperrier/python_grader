@@ -269,7 +269,7 @@ def process_survey(args):
                 submission_folder = get_submission_folder(folder_name)
             except KeyError as e:
                 print utils.output.colorify(str(e),'warning')
-            filename = os.path.join(submission_folder,'survery.txt')
+            filename = os.path.join(submission_folder,'survey.txt')
 
             #create survey file and make it stdout
             sys.stdout = open(filename,'w')

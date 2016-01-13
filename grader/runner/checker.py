@@ -36,7 +36,7 @@ class CheckerProblem(object):
                 correct += 1 if test.check(local_env,output) else 0
         total = correct*self.points/len(self.tests)
 
-        print utils.output.colorify('\tCorrectness: {:g}/{}'.format(total,self.points),'green')
+        print utils.output.colorify('\tCorrectness: {:g}/{:g}'.format(total,self.points),'green')
         for label,points in self.extra_points:
             print utils.output.colorify('\t{}: */{}'.format(label.title(),points),'green')
         print ''
@@ -103,28 +103,32 @@ class EqualsCheck(BaseCheck):
 
 class OutputCheck(BaseCheck):
 
-    def __init__(self,regex_str,label=None,consume=True,convert=None, reg_options=re.I|re.M, *args):
+    def __init__(self, label, regex_str, *args, **kwargs):
         self.regex_str = regex_str
-        self.label = label if label else regex_str
-        self.consume = consume
+        self.label = label
+        self.consume = kwargs.get('consume', True)
+        self.convert = kwargs.get('convert', None)
+        self.reg_options = kwargs.get('reg_options', re.I|re.M)
         self.regex_solutions = args
-        self.reg_options = reg_options
+
+
 
     def check(self,env,output,pos=0):
         match = re.search(self.regex_str,output[pos:],self.reg_options)
-        print '\t- output: %s'%self.label,
+        print '\t- %s: Expected %s '%(self.label, self.regex_solutions if len(self.regex_solutions) != 1 else self.regex_solutions[0]),
         if match:
             groups = match.groups()
+            print 'Found %s'%(groups if len(groups) != 1 else groups[0],),
             next_pos = pos+match.end() if self.consume else pos
             #First check all groups if they exist
             if len(self.regex_solutions) != 0 and len(groups) != 0:
                 #Compare equality on groups
                 for idx,value in enumerate(self.regex_solutions):
                     answer = groups[idx]
-                    if convert is not None:
-                        answer = convert(answer)
+                    if self.convert is not None:
+                        answer = self.convert(answer)
                     if not equals.eq(answer,value):
-                        print '  (NOT FOUND)'
+                        print '  (WRONG VALUE)'
                         return False, next_pos
             print '  (OK)'
             return True, next_pos
