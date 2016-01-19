@@ -97,10 +97,10 @@ class BaseRunner(object):
     # All files that student code should generate.
     generated_files = set()
 
-    #All files to export to the student's graded directory
+    # All files to export to the student's graded directory
     export_files = set()
 
-    #AST NodeTransformer Class
+    # AST NodeTransformer Class
     ParserClass = NodeRemover
 
     @abc.abstractmethod
@@ -111,31 +111,31 @@ class BaseRunner(object):
         ''' Make the header and prepend to feedback'''
         return ''
 
-    def make_footer(self):
+    def make_footer(self, total):
         ''' make the footer for feedback'''
         return ''
 
     def grade(self):
         '''Main grading entry point'''
 
-        #Run main file and parse into env with stdout going to output
-        env,output = self.run_hw()
+        # Run main file and parse into env with stdout going to output
+        env, output = self.run_hw()
 
-        #Check problems and create base feedback with a total
-        feedback,total = self.check_hw(env,output)
+        # Check problems and create base feedback with a total
+        feedback, total = self.check_hw(env, output)
 
-        #Make the header and prepend to feedback
+        # Make the header and prepend to feedback
         feedback.prepend(self.make_header(total))
 
-        #Add footer to feedback
-        feedback.write(self.make_footer())
+        # Add footer to feedback
+        feedback.write(self.make_footer(total))
 
         if not self.show_feedback:
-            utils.output.PROGRESS_LOG('Total: {0[total]}/{0[points]}'.format(total),color='green')
+            utils.output.PROGRESS_LOG('Total: {0[total]}/{0[points]}'.format(total), color='green')
 
         return feedback,output
 
-    def __init__(self,show_feedback=False):
+    def __init__(self, show_feedback=False):
         self.show_feedback = show_feedback
 
     def run_hw(self):
@@ -143,17 +143,17 @@ class BaseRunner(object):
         Runs self.env_file and returns the environment.
         Runs self.main_file and returns the output.
         '''
-        #Parse env file into abstract syntax tree
+        # Parse env file into abstract syntax tree
         try:
-            tree = self.ParserClass(self.env_file,self.remove_func_list).remove()
-            parsed = compile(tree,filename=self.env_file,mode='exec')
+            tree = self.ParserClass(self.env_file, self.remove_func_list).remove()
+            parsed = compile(tree, filename=self.env_file, mode='exec')
         except Exception as e:
             raise GraderSyntaxError(e)
 
         # Execute file into blank environment
         # Make name space for student code to execute in
         env = {}
-        #Make output logger and set as stdout
+        # Make output logger and set as stdout
         output = utils.output.PrintLogger(end='')
         sys.stdout = output
 
@@ -161,27 +161,28 @@ class BaseRunner(object):
             # Has a main function so use that for output
             try:
                 # Exeute student code into environment
-                exec(parsed,env)
+                exec(parsed, env)
             except Exception as e:
                 # Reset standard out on error
                 sys.stdout = sys.__stdout__
-                raise GraderExecuteError(e,output=output)
+                raise GraderExecuteError(e, output=output)
 
             # Set parsed to the string main() to run main function
             parsed = 'main()'
 
-        #Execute main_file
+        # Execute main_file
         try:
-            exec(parsed,env) #exectute students code.
+            # Exectute students code
+            exec(parsed, env)
         except Exception as e:
-            raise GraderRunTimeError(e,output=output)
+            raise GraderRunTimeError(e, output=output)
         finally:
             # Reset standard out
             sys.stdout = sys.__stdout__
 
-        return env,output
+        return env, output
 
-    def check_hw(self,env,output,show_feedback=False):
+    def check_hw(self, env, output, show_feedback=False):
         '''Scores hw based on problems from get_problems
             :param env: dictonary of student's hw envirnoment
             :param output: PrintLogger output from environment parsing
@@ -194,10 +195,10 @@ class BaseRunner(object):
         for test in self.get_problems():
             total += test.check(env,str_output)
 
-        #Reset standard out
+        # Reset standard out
         sys.stdout = sys.__stdout__
 
-        #Round total points
-        total['total'] = round(total['total'],2)
+        # Round total points
+        total['total'] = round(total['total'], 2)
 
-        return feedback,total
+        return feedback, total

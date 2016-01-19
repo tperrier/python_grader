@@ -21,7 +21,7 @@ class CheckerProblem(object):
         #If there are no tests to run return 0
         if len(self.tests) == 0:
             print '\tNo tests'
-            return 0,self.points,self.style
+            return 0,self.points,self.extra_points
 
         #Create new local environment
         local_env = copy.copy(env)
