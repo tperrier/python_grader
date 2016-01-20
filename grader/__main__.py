@@ -17,7 +17,7 @@ def make_argument_parser():
     parser.add_argument('--grade-modual',default='grade',help='Python script to run grades. Default GRADING_FOLDER/grade.py ',metavar='GRADE_FILE')
     parser.add_argument('--feedback_dir',default=None,help='Directory to place feedback. Default GRADING_FOLDER/feedback')
 
-    parser.add_argument('-q','--quite',action='store_false',default=True,help='Say yes to everything. Default is True')
+    parser.add_argument('-q','--quiet',action='store_false',default=True,help='Say yes to everything. Default is True')
     parser.add_argument('-f','--show-feedback',action='store_true',default=False)
     parser.add_argument('--refresh-sandbox',action='store_true',default=False,help='Refresh all config scripts in Grading Sandbox')
 

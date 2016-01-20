@@ -182,7 +182,7 @@ def grade_student(args,submission_path):
 
 def copy_feedback_and_remove(args,feedback_path):
     if os.path.exists(feedback_path):
-        if not args.quite:
+        if not args.quiet:
             utils.output.verify("Are you sure you want to overwrite existing feedback for this student?")
     else:
         utils.dirs.ensure_directory_exists(feedback_path)
@@ -247,7 +247,7 @@ def process_survey(args):
 
     def get_submission_folder(folder_name):
         for submission_path in feedback_folders:
-            if folder_name in submission_path:
+            if folder_name.lower() in submission_path.lower():
                 print submission_path
                 return submission_path
 
@@ -263,7 +263,7 @@ def process_survey(args):
         #Process each survey answer
         for row in csv_file:
             student = config.student_netid_map[row[0]]
-            folder_name = '%s_%s'%(student.last_name,student.number)
+            folder_name = student.username
 
             try:
                 submission_folder = get_submission_folder(folder_name)
