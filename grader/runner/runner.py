@@ -103,6 +103,9 @@ class BaseRunner(object):
     # AST NodeTransformer Class
     ParserClass = NodeRemover
 
+    # Command line args passed to the students code
+    command_line_args = []
+
     @abc.abstractmethod
     def get_problems(self):
         return 'A list of all problems to check'
@@ -153,6 +156,11 @@ class BaseRunner(object):
         # Execute file into blank environment
         # Make name space for student code to execute in
         env = {}
+
+        # set the command line arguments for running the student code
+        temp_args = sys.argv
+        sys.argv = self.command_line_args
+
         # Make output logger and set as stdout
         output = utils.output.PrintLogger(end='')
         sys.stdout = output
@@ -179,6 +187,9 @@ class BaseRunner(object):
         finally:
             # Reset standard out
             sys.stdout = sys.__stdout__
+
+        # restore the original command line args
+        sys.argv = temp_args
 
         return env, output
 
