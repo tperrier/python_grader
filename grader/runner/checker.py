@@ -7,10 +7,11 @@ import equals, runner
 
 class CheckerProblem(object):
 
-    def __init__(self,name,tests,env=None,points=None,extra_points=None):
+    def __init__(self,name,tests,env=None,atomic=False,points=None,extra_points=None):
         self.name = name
         self.tests = tests
         self.env = env if env is not None else {}
+        self.atomic = atomic
         self.points = float(points if points is not None else len(tests))
         self.extra_points = [ (e[0].lower(),e[1]) for e in extra_points ] if extra_points is not None else []
 
@@ -35,6 +36,8 @@ class CheckerProblem(object):
             else:
                 correct += 1 if test.check(local_env,output) else 0
         total = correct*self.points/len(self.tests)
+        if self.atomic:
+            total = total if total == self.points else 0
 
         print utils.output.colorify('\tCorrectness: {:g}/{:g}'.format(total,self.points),'green')
         for label,points in self.extra_points:
