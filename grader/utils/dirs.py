@@ -5,13 +5,13 @@ import output
 
 def get_sub_directories(*paths,**kwargs):
     '''
-    
+
     '''
     filter = kwargs.get('filter',None)
     sub_dirs = []
     for path in paths:
         if not os.path.isdir(path):
-            continue #short circuit if not a directory 
+            continue #short circuit if not a directory
         for sub in next(os.walk(path))[1]:
             if filter is None or filter(sub):
                 sub_dirs.append(os.path.join(path,sub))
@@ -19,7 +19,7 @@ def get_sub_directories(*paths,**kwargs):
 
 def ensure_directory_exists(path):
     '''
-    
+
     '''
     if not os.path.exists(path):
         output.DEBUG_LOG("Creating {0}...".format(path))
@@ -27,17 +27,19 @@ def ensure_directory_exists(path):
 
 def copy_all(src_parent_path, dst_parent_path, *paths):
     '''
-    
+
     '''
+    print paths
     for glob_path in paths:
-        print >> sys.stderr , src_parent_path,glob_path
         src_path = os.path.join(src_parent_path, glob_path)
-        for path in glob.glob(src_path):
-            copy_one(path,dst_parent_path)
-            
+        glob_files = glob.glob(src_path)
+        print >> sys.stderr , src_parent_path, glob_path
+        for path in glob_files:
+            copy_one(path, dst_parent_path)
+
 def copy_one(src_path,dst_parent_path):
     '''
-    
+
     '''
     if not os.path.exists(src_path):
             print output.colorify('Could not copy. File or folder DNE: {0}'.format(src_path),'warning')
@@ -52,7 +54,7 @@ def copy_one(src_path,dst_parent_path):
 
 def remove_all(parent_path,*paths):
     '''
-    
+
     '''
     if len(paths) == 0:
         shutil.rmtree(parent_path)

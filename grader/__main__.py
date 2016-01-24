@@ -10,6 +10,7 @@ def make_argument_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-g','--grading-folder',default='current',help='Directory containing GRADE_FILE and SUBMISSIONS. Defaults to current',metavar='FOLDER')
 
+    # for grading a subset of a submission directory
     parser.add_argument('-t','--target',nargs='*',help='Single submission FOLDER to run',metavar='FOLDER')
     parser.add_argument('-s','--submissions-folder',help='Folder inside SUBMISSION_DIR to process. Defaults to all folders',metavar='SUBMISSIONS_FOLDER')
 
