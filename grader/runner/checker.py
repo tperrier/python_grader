@@ -1,6 +1,7 @@
 import sys,copy,abc,re,inspect
 import traceback,linecache,collections
 import code
+import filecmp
 
 import grader.utils as utils
 import equals, runner
@@ -198,3 +199,18 @@ class MethodCheck(BaseCheck):
         else:
             print '  (OK)'
             return True
+
+class OutputFileCheck(BaseCheck):
+    def __init__(self,student_file,solution_file):
+        self.student_file, self.solution_file = student_file, solution_file
+
+    def check(self,env,output):
+        print '\t- check output file', self.student_file,
+        if filecmp.cmp(self.student_file, self.solution_file):
+            print '  (OK)'
+            return True
+        else:
+            print '  (FAIL!)'
+            return False
+
+
