@@ -131,7 +131,8 @@ class BaseRunner(object):
         feedback.prepend(self.make_header(total))
 
         # Add footer to feedback
-        feedback.write(self.make_footer(total))
+        #feedback.write(self.make_footer(total))
+        feedback.write(self.make_footer())
 
         if not self.show_feedback:
             utils.output.PROGRESS_LOG('Total: {0[total]}/{0[points]}'.format(total), color='green')
